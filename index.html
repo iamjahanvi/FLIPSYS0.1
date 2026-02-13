@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF2FLIP // SYS.01</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              mono: ['"Space Mono"', 'monospace'],
+            },
+            colors: {
+              ink: {
+                main: '#1A1A1A',
+                dim: '#707070',
+                light: '#B0B0B0',
+              },
+              panel: {
+                bg: '#F0F0F0',
+                border: '#C0C0C0',
+              },
+              sys: {
+                bg: '#E6E6E6',
+                grid: '#D6D6D6',
+                accent: '#00FF00',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Custom Scrollbar for a technical feel */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+      
+      /* PDF Layer Text Selection */
+      .react-pdf__Page__textContent {
+        display: none !important; /* Hide text selection layer for cleaner flip effect */
+      }
+      .react-pdf__Page__annotations {
+        display: none !important;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "lucide-react": "https://esm.sh/lucide-react@^0.564.0",
+    "react-pdf": "https://esm.sh/react-pdf@^10.3.0",
+    "react-pageflip": "https://esm.sh/react-pageflip@^2.0.3"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
