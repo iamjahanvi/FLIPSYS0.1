@@ -9,11 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react-dom": "^19.2.4",
-    "react": "^19.2.4",
+    "framer-motion": "^12.34.0",
     "lucide-react": "^0.564.0",
-    "react-pdf": "^10.3.0",
-    "react-pageflip": "^2.0.3"
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-pageflip": "^2.0.3",
+    "react-pdf": "^10.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

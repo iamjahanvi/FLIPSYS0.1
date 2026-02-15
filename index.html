@@ -59,6 +59,12 @@
       .react-pdf__Page__annotations {
         display: none !important;
       }
+
+      /* Progress bar shine animation */
+      @keyframes slide {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
     </style>
     <script type="module" src="/index.tsx"></script>
   </head>
