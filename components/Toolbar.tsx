@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { Config, formatBytes } from '../types';
+import { uploadPDF } from '../lib/supabase';
 
 interface ToolbarProps {
   config: Config;
@@ -7,9 +8,10 @@ interface ToolbarProps {
   onUpload: (file: File) => void;
   pdfName?: string;
   pdfSize?: number;
+  pdfFile?: File | null;
 }
 
-export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, pdfName, pdfSize }) => {
+export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, pdfName, pdfSize, pdfFile }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [hasCopied, setHasCopied] = React.useState(false);
@@ -28,21 +30,23 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
     fileInputRef.current?.click();
   };
 
-  const handleGenerate = () => {
-    if (!pdfName) return;
+  const handleGenerate = async () => {
+    if (!pdfName || !pdfFile) return;
     setIsGenerating(true);
 
-    // Simulate generation delay
-    setTimeout(() => {
-      const id = Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-      setDeployUrl(`flip.bk/${id}`);
-      setIsGenerating(false);
-
-      // Copy to clipboard
-      navigator.clipboard.writeText(`https://flip.bk/${id}`);
+    const result = await uploadPDF(pdfFile);
+    
+    if (result) {
+      const shareUrl = `${window.location.origin}?share=${result.id}`;
+      setDeployUrl(shareUrl);
+      navigator.clipboard.writeText(shareUrl);
       setHasCopied(true);
       setTimeout(() => setHasCopied(false), 2000);
-    }, 1500);
+    } else {
+      alert('Failed to upload PDF. Please try again.');
+    }
+    
+    setIsGenerating(false);
   };
 
   return (
@@ -125,13 +129,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
             onChange={(e) => setConfig({ ...config, shadowIntensity: parseInt(e.target.value) })}
             className="w-full h-[2px] bg-ink-light appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-ink-main [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-ink-main [&::-webkit-slider-thumb]:mt-[-1px]"
           />
-        </div>
-
-        <div className="flex items-center justify-between text-[10px] font-bold tracking-widest text-ink-dim cursor-pointer" onClick={() => setConfig({ ...config, isHardCover: !config.isHardCover })}>
-          <span>HARD_COVER</span>
-          <div className={`w-6 h-3 border border-ink-main relative transition-all ${config.isHardCover ? 'bg-ink-main/10' : ''}`}>
-            <div className={`absolute top-[1px] w-2 h-2 bg-ink-main transition-all duration-300 ${config.isHardCover ? 'left-[13px]' : 'left-[1px]'}`}></div>
-          </div>
         </div>
 
         <div className="flex items-center justify-between text-[10px] font-bold tracking-widest text-ink-dim cursor-pointer" onClick={() => setConfig({ ...config, useSound: !config.useSound })}>

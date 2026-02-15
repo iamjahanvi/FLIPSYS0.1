@@ -6,6 +6,7 @@ import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
 import { FlipBookDemo } from './components/FlipBookDemo';
 import { Config, DefaultConfig } from './types';
+import { getPDF } from './lib/supabase';
 
 // PDF.js worker setup is required for react-pdf
 import { pdfjs } from 'react-pdf';
@@ -43,6 +44,33 @@ export default function App() {
   // Set initialized flag after mount to enable transitions
   useEffect(() => {
     setHasInitialized(true);
+  }, []);
+
+  // Load shared PDF from URL parameter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shareId = params.get('share');
+    
+    if (shareId && !pdfFile) {
+      setIsLoading(true);
+      getPDF(shareId).then((result) => {
+        if (result) {
+          fetch(result.url)
+            .then(res => res.blob())
+            .then(blob => {
+              const file = new File([blob], result.fileName, { type: 'application/pdf' });
+              handleUpload(file);
+            })
+            .catch(() => {
+              setIsLoading(false);
+              alert('Failed to load shared PDF');
+            });
+        } else {
+          setIsLoading(false);
+          alert('Shared PDF not found');
+        }
+      });
+    }
   }, []);
 
   const handleUpload = (file: File) => {
@@ -245,6 +273,7 @@ export default function App() {
             onUpload={handleUpload}
             pdfName={pdfFile?.name}
             pdfSize={pdfFile?.size}
+            pdfFile={pdfFile}
           />
         </div>
       </main>
