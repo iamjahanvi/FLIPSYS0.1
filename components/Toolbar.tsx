@@ -34,16 +34,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
     if (!pdfName || !pdfFile) return;
     setIsGenerating(true);
 
-    const result = await uploadPDF(pdfFile);
-    
-    if (result) {
-      const shareUrl = `${window.location.origin}?share=${result.id}`;
-      setDeployUrl(shareUrl);
-      navigator.clipboard.writeText(shareUrl);
-      setHasCopied(true);
-      setTimeout(() => setHasCopied(false), 2000);
-    } else {
-      alert('Failed to upload PDF. Please try again.');
+    try {
+      const result = await uploadPDF(pdfFile);
+      
+      if (result) {
+        const shareUrl = `${window.location.origin}?share=${result.id}`;
+        setDeployUrl(shareUrl);
+        navigator.clipboard.writeText(shareUrl);
+        setHasCopied(true);
+        setTimeout(() => setHasCopied(false), 2000);
+      } else {
+        alert('Failed to upload PDF. Check console for details.');
+      }
+    } catch (err: any) {
+      alert('Upload error: ' + (err.message || 'Unknown error'));
     }
     
     setIsGenerating(false);
