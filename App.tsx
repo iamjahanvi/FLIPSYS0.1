@@ -89,21 +89,31 @@ export default function App() {
 
   const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setTotalPages(numPages);
-    // Simulate page-by-page processing with realistic timing
-    let page = 0;
-    const processingTime = Math.max(100, Math.min(500, 3000 / numPages)); // Adaptive timing based on page count
-    const interval = setInterval(() => {
-      page++;
-      setProcessingPage(page);
-      if (page >= numPages) {
-        clearInterval(interval);
-        // Add a small delay after completion before showing the flipbook
-        setTimeout(() => {
-          setIsLoading(false);
-          setIsReady(true);
-        }, 800);
-      }
-    }, processingTime);
+    
+    // Check if this is a shared PDF (from URL parameter)
+    const params = new URLSearchParams(window.location.search);
+    const isSharedPDF = params.get('share') !== null;
+    
+    if (isSharedPDF) {
+      // Skip loading animation for shared PDFs - show immediately
+      setIsLoading(false);
+      setIsReady(true);
+    } else {
+      // Simulate page-by-page processing with realistic timing for uploads
+      let page = 0;
+      const processingTime = Math.max(100, Math.min(500, 3000 / numPages));
+      const interval = setInterval(() => {
+        page++;
+        setProcessingPage(page);
+        if (page >= numPages) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setIsLoading(false);
+            setIsReady(true);
+          }, 800);
+        }
+      }, processingTime);
+    }
   };
 
   const handleAbortProcessing = () => {
