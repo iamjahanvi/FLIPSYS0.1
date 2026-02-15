@@ -15,14 +15,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [hasCopied, setHasCopied] = React.useState(false);
-  const [deployUrl, setDeployUrl] = React.useState('flip.bk/---- ----');
+  const [deployUrl, setDeployUrl] = React.useState('https://flipsys-0-1.vercel.app?share=...');
   const [flipSpeedValue, setFlipSpeedValue] = React.useState(config.flipSpeed);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === 'application/pdf') {
       onUpload(file);
-      setDeployUrl('flip.bk/---- ----');
+      setDeployUrl('https://flipsys-0-1.vercel.app?share=...');
     }
   };
 
