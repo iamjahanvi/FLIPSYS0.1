@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { Config } from '../types';
 
 const supabaseUrl = (typeof process !== 'undefined' && process.env.VITE_SUPABASE_URL) || 'https://gulpdfocmnoqhutcqoqp.supabase.co';
 const supabaseKey = (typeof process !== 'undefined' && process.env.VITE_SUPABASE_ANON_KEY) || 'sb_publishable_JfI_2GV1ao3rSelpm2MeUw_Vgka02Zf';
@@ -10,9 +11,10 @@ export interface FlipbookRecord {
   file_path: string;
   file_name: string;
   created_at: string;
+  config?: Config;
 }
 
-export async function uploadPDF(file: File): Promise<{ id: string; url: string } | null> {
+export async function uploadPDF(file: File, config: Config): Promise<{ id: string; url: string } | null> {
   try {
     const id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const filePath = `${id}/${file.name}`;
@@ -37,6 +39,11 @@ export async function uploadPDF(file: File): Promise<{ id: string; url: string }
           id,
           file_path: filePath,
           file_name: file.name,
+          config: {
+            flipSpeed: config.flipSpeed,
+            shadowIntensity: config.shadowIntensity,
+            useSound: config.useSound,
+          },
         }
       ]);
     
@@ -52,7 +59,7 @@ export async function uploadPDF(file: File): Promise<{ id: string; url: string }
   }
 }
 
-export async function getPDF(id: string): Promise<{ url: string; fileName: string } | null> {
+export async function getPDF(id: string): Promise<{ url: string; fileName: string; config?: Partial<Config> } | null> {
   try {
     const { data, error } = await supabase
       .from('flipbooks')
@@ -69,7 +76,7 @@ export async function getPDF(id: string): Promise<{ url: string; fileName: strin
       .from('PDFs')
       .getPublicUrl(data.file_path);
     
-    return { url: publicUrl.publicUrl, fileName: data.file_name };
+    return { url: publicUrl.publicUrl, fileName: data.file_name, config: data.config };
   } catch (error) {
     console.error('Error getting PDF:', error);
     return null;

@@ -35,7 +35,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
     setIsGenerating(true);
 
     try {
-      const result = await uploadPDF(pdfFile);
+      const result = await uploadPDF(pdfFile, config);
       
       if (result) {
         const shareUrl = `${window.location.origin}?share=${result.id}`;

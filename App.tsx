@@ -59,6 +59,13 @@ export default function App() {
       setIsLoading(true);
       getPDF(shareId).then((result) => {
         if (result) {
+          // Apply saved config if available
+          if (result.config) {
+            setConfig(prev => ({
+              ...prev,
+              ...result.config,
+            }));
+          }
           fetch(result.url)
             .then(res => res.blob())
             .then(blob => {
