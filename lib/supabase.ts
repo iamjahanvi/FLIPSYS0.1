@@ -18,7 +18,7 @@ export async function uploadPDF(file: File): Promise<{ id: string; url: string }
     const filePath = `${id}/${file.name}`;
     
     const { error: uploadError } = await supabase.storage
-      .from('pdfs')
+      .from('PDFs')
       .upload(filePath, file);
     
     if (uploadError) {
@@ -27,7 +27,7 @@ export async function uploadPDF(file: File): Promise<{ id: string; url: string }
     }
     
     const { data: publicUrl } = supabase.storage
-      .from('pdfs')
+      .from('PDFs')
       .getPublicUrl(filePath);
     
     const { error: dbError } = await supabase
@@ -66,7 +66,7 @@ export async function getPDF(id: string): Promise<{ url: string; fileName: strin
     }
     
     const { data: publicUrl } = supabase.storage
-      .from('pdfs')
+      .from('PDFs')
       .getPublicUrl(data.file_path);
     
     return { url: publicUrl.publicUrl, fileName: data.file_name };
