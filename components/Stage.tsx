@@ -13,6 +13,7 @@ interface StageProps {
   totalPages: number;
   onUpload: (file: File) => void;
   onError?: (errorMessage: string) => void;
+  isSharedView?: boolean;
 }
 
 // Move PDFPage outside to ensure referential stability
@@ -57,7 +58,8 @@ export const Stage: React.FC<StageProps> = ({
   currentPage,
   totalPages,
   onUpload,
-  onError
+  onError,
+  isSharedView = false
 }) => {
   const bookRef = useRef<any>(null);
   const [scale, setScale] = useState(1);
@@ -231,7 +233,7 @@ export const Stage: React.FC<StageProps> = ({
   }
 
   return (
-    <section className="flex-1 relative flex flex-col items-center justify-center p-4 pb-[240px] md:pb-[210px] overflow-hidden">
+    <section className={`flex-1 relative flex flex-col items-center justify-center overflow-hidden ${isSharedView ? 'p-4 pb-4' : 'p-4 pb-[240px] md:pb-[210px]'}`}>
       {/* Hide all react-pageflip shadows */}
       <style>{`
         .stf__outerShadow,
@@ -330,7 +332,7 @@ export const Stage: React.FC<StageProps> = ({
       </div>
 
       {/* Floating Controls */}
-      <div className={`absolute bottom-[240px] md:bottom-[210px] left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border px-4 py-2 flex items-center gap-4 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute ${isSharedView ? 'bottom-10' : 'bottom-[240px] md:bottom-[210px]'} left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border px-4 py-2 flex items-center gap-4 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <button
           onClick={goToPrev}
           className="w-8 h-8 border border-ink-dim flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-sm font-bold"

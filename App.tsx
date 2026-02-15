@@ -19,6 +19,10 @@ export default function App() {
   if (isDemoMode) {
     return <FlipBookDemo />;
   }
+
+  // Check if this is a shared PDF view (read-only mode)
+  const isSharedView = window.location.search.includes('share=');
+
   const [config, setConfig] = useState<Config>(DefaultConfig);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [totalPages, setTotalPages] = useState<number>(0);
@@ -157,10 +161,27 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col font-mono text-ink-main overflow-hidden select-none" style={backgroundStyle}>
-      <Header isReady={isReady} isLoading={isLoading} hasError={hasError} />
+    <div className={`h-screen w-screen flex flex-col font-mono text-ink-main overflow-hidden select-none ${isSharedView ? 'bg-[#E6E6E6]' : ''}`} style={isSharedView ? undefined : backgroundStyle}>
+      {/* Header - simplified for shared view */}
+      {!isSharedView && <Header isReady={isReady} isLoading={isLoading} hasError={hasError} />}
+      
+      {/* Shared view header */}
+      {isSharedView && (
+        <header className="h-12 flex items-center px-10 justify-between bg-transparent z-10">
+          <div className="flex items-center gap-3 text-xs font-bold">
+            <span className="w-2 h-2 bg-ink-main rounded-full"></span>
+            PDF2FLIP // SYS.01 // READ_MODE
+          </div>
+          <a 
+            href="/" 
+            className="text-[10px] font-bold border-b border-ink-main pb-0.5 hover:opacity-70 transition-opacity"
+          >
+            EXIT [ESC]
+          </a>
+        </header>
+      )}
 
-      <main className="flex-1 flex flex-col min-h-0 relative">
+      <main className={`flex-1 flex flex-col min-h-0 relative ${isSharedView ? 'pb-0' : ''}`}>
         {/* Error State - Shows when processing fails */}
         {hasError && errorInfo && (
           <ErrorState
@@ -195,6 +216,7 @@ export default function App() {
             totalPages={totalPages}
             onUpload={handleUpload}
             onError={handleError}
+            isSharedView={isSharedView}
           />
         )}
 
@@ -209,83 +231,88 @@ export default function App() {
               currentPage={currentPage}
               totalPages={totalPages}
               onUpload={handleUpload}
+              isSharedView={isSharedView}
             />
           </div>
         )}
 
-        {/* Quick Start Guide - Shows when no file uploaded */}
-        <div className={`absolute bottom-0 left-0 right-0 z-40 ${hasInitialized ? 'transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)]' : ''} ${!pdfFile ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
-          <section className="h-[220px] md:h-48 bg-[#F0F0F0]/95 border-t border-panel-border backdrop-blur-md px-6 py-4 shrink-0">
-            <div className="h-full flex flex-col">
-              {/* Header */}
-              <div className="flex items-center gap-2 pb-3 border-b border-ink-light">
-                <span className="text-[10px] font-bold text-ink-dim tracking-widest">QUICK START GUIDE</span>
+        {/* Quick Start Guide - Shows when no file uploaded (hidden in shared view) */}
+        {!isSharedView && (
+          <div className={`absolute bottom-0 left-0 right-0 z-40 ${hasInitialized ? 'transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)]' : ''} ${!pdfFile ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
+            <section className="h-[220px] md:h-48 bg-[#F0F0F0]/95 border-t border-panel-border backdrop-blur-md px-6 py-4 shrink-0">
+              <div className="h-full flex flex-col">
+                {/* Header */}
+                <div className="flex items-center gap-2 pb-3 border-b border-ink-light">
+                  <span className="text-[10px] font-bold text-ink-dim tracking-widest">QUICK START GUIDE</span>
+                </div>
+                
+                {/* Steps - Horizontal Layout */}
+                <div className="flex-1 flex items-center justify-center gap-8 md:gap-16 mt-4">
+                  {/* Step 01: UPLOAD */}
+                  <div className="flex items-center gap-3 text-left max-w-[220px]">
+                    <div className="w-7 h-7 border-2 border-ink-main flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-ink-main">01</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-ink-main tracking-widest mb-1">UPLOAD</h3>
+                      <p className="text-[10px] text-ink-dim leading-relaxed">Drag any PDF document into the workspace to start the engine.</p>
+                    </div>
+                  </div>
+
+                  {/* Connector Arrow */}
+                  <div className="hidden md:flex items-center text-ink-light">
+                    <svg width="24" height="12" viewBox="0 0 24 12" fill="none" className="opacity-50">
+                      <path d="M0 6H22M22 6L17 1M22 6L17 11" stroke="currentColor" strokeWidth="1.5"/>
+                    </svg>
+                  </div>
+
+                  {/* Step 02: CONFIGURE */}
+                  <div className="flex items-center gap-3 text-left max-w-[220px]">
+                    <div className="w-7 h-7 border-2 border-ink-main flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-ink-main">02</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-ink-main tracking-widest mb-1">CONFIGURE</h3>
+                      <p className="text-[10px] text-ink-dim leading-relaxed">Adjust physics, shadows, and flip mechanics in the lower panel.</p>
+                    </div>
+                  </div>
+
+                  {/* Connector Arrow */}
+                  <div className="hidden md:flex items-center text-ink-light">
+                    <svg width="24" height="12" viewBox="0 0 24 12" fill="none" className="opacity-50">
+                      <path d="M0 6H22M22 6L17 1M22 6L17 11" stroke="currentColor" strokeWidth="1.5"/>
+                    </svg>
+                  </div>
+
+                  {/* Step 03: DEPLOY */}
+                  <div className="flex items-center gap-3 text-left max-w-[220px]">
+                    <div className="w-7 h-7 border-2 border-ink-main flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-ink-main">03</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-ink-main tracking-widest mb-1">DEPLOY</h3>
+                      <p className="text-[10px] text-ink-dim leading-relaxed">Generate a unique URL to share your interactive flipbook.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              
-              {/* Steps - Horizontal Layout */}
-              <div className="flex-1 flex items-center justify-center gap-8 md:gap-16 mt-4">
-                {/* Step 01: UPLOAD */}
-                <div className="flex items-center gap-3 text-left max-w-[220px]">
-                  <div className="w-7 h-7 border-2 border-ink-main flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-ink-main">01</span>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-ink-main tracking-widest mb-1">UPLOAD</h3>
-                    <p className="text-[10px] text-ink-dim leading-relaxed">Drag any PDF document into the workspace to start the engine.</p>
-                  </div>
-                </div>
+            </section>
+          </div>
+        )}
 
-                {/* Connector Arrow */}
-                <div className="hidden md:flex items-center text-ink-light">
-                  <svg width="24" height="12" viewBox="0 0 24 12" fill="none" className="opacity-50">
-                    <path d="M0 6H22M22 6L17 1M22 6L17 11" stroke="currentColor" strokeWidth="1.5"/>
-                  </svg>
-                </div>
-
-                {/* Step 02: CONFIGURE */}
-                <div className="flex items-center gap-3 text-left max-w-[220px]">
-                  <div className="w-7 h-7 border-2 border-ink-main flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-ink-main">02</span>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-ink-main tracking-widest mb-1">CONFIGURE</h3>
-                    <p className="text-[10px] text-ink-dim leading-relaxed">Adjust physics, shadows, and flip mechanics in the lower panel.</p>
-                  </div>
-                </div>
-
-                {/* Connector Arrow */}
-                <div className="hidden md:flex items-center text-ink-light">
-                  <svg width="24" height="12" viewBox="0 0 24 12" fill="none" className="opacity-50">
-                    <path d="M0 6H22M22 6L17 1M22 6L17 11" stroke="currentColor" strokeWidth="1.5"/>
-                  </svg>
-                </div>
-
-                {/* Step 03: DEPLOY */}
-                <div className="flex items-center gap-3 text-left max-w-[220px]">
-                  <div className="w-7 h-7 border-2 border-ink-main flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-ink-main">03</span>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-ink-main tracking-widest mb-1">DEPLOY</h3>
-                    <p className="text-[10px] text-ink-dim leading-relaxed">Generate a unique URL to share your interactive flipbook.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        {/* Toolbar - Shows only after file uploaded AND processing complete */}
-        <div className={`absolute bottom-0 left-0 right-0 z-40 ${hasInitialized ? 'transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)]' : ''} ${pdfFile && !isLoading ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
-          <Toolbar
-            config={config}
-            setConfig={setConfig}
-            onUpload={handleUpload}
-            pdfName={pdfFile?.name}
-            pdfSize={pdfFile?.size}
-            pdfFile={pdfFile}
-          />
-        </div>
+        {/* Toolbar - Shows only after file uploaded AND processing complete (hidden in shared view) */}
+        {!isSharedView && (
+          <div className={`absolute bottom-0 left-0 right-0 z-40 ${hasInitialized ? 'transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)]' : ''} ${pdfFile && !isLoading ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
+            <Toolbar
+              config={config}
+              setConfig={setConfig}
+              onUpload={handleUpload}
+              pdfName={pdfFile?.name}
+              pdfSize={pdfFile?.size}
+              pdfFile={pdfFile}
+            />
+          </div>
+        )}
       </main>
     </div>
   );
