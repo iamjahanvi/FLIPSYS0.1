@@ -67,10 +67,29 @@ export const Stage: React.FC<StageProps> = ({
   const [isFlipping, setIsFlipping] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [bookDimensions, setBookDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const isManualFlipRef = useRef(false);
 
-  // Reset dimensions when file changes
+  // Initialize audio on mount
+  useEffect(() => {
+    const audio = new Audio('/Assets/freesound_community-turning-book-page-79935 (mp3cut.net).mp3');
+    audio.volume = 0.5;
+    audio.preload = 'auto';
+    audioRef.current = audio;
+    
+    // Pre-load the audio
+    audio.load();
+    
+    return () => {
+      audioRef.current = null;
+    };
+  }, []);
+
+  // Reset dimensions and error when file changes
   useEffect(() => {
     setBookDimensions(null);
+    setPdfError(null);
   }, [pdfFile]);
 
   const onDocumentLoad = async (pdf: any) => {
@@ -89,6 +108,9 @@ export const Stage: React.FC<StageProps> = ({
       onDocumentLoadSuccess({ numPages: pdf.numPages });
     } catch (error) {
       console.error("Error calculating PDF dimensions:", error);
+      if (onError) {
+        onError('Failed to process PDF structure');
+      }
     }
   };
 
@@ -133,16 +155,24 @@ export const Stage: React.FC<StageProps> = ({
   }, [bookDimensions]);
 
   const playFlipSound = () => {
-    if (config.useSound) {
-      const audio = new Audio('/Assets/freesound_community-turning-book-page-79935 (mp3cut.net).mp3');
-      audio.volume = 0.5;
-      audio.play().catch(e => console.log("Audio play blocked by browser policy"));
+    if (config.useSound && audioRef.current) {
+      // Reset to start and play
+      audioRef.current.currentTime = 0;
+      const playPromise = audioRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(e => {
+          // Auto-play was prevented, try again on next user interaction
+          console.log("Audio play blocked, will retry on next interaction");
+        });
+      }
     }
   };
 
   const goToPrev = () => {
     if (bookRef.current && !isFlipping) {
       setIsFlipping(true);
+      isManualFlipRef.current = true;
       playFlipSound();
       bookRef.current.pageFlip().flipPrev();
     }
@@ -151,6 +181,7 @@ export const Stage: React.FC<StageProps> = ({
   const goToNext = () => {
     if (bookRef.current && !isFlipping) {
       setIsFlipping(true);
+      isManualFlipRef.current = true;
       playFlipSound();
       bookRef.current.pageFlip().flipNext();
     }
@@ -203,21 +234,40 @@ export const Stage: React.FC<StageProps> = ({
             className="relative group cursor-pointer"
             onClick={() => fileInputRef.current?.click()}
           >
-            {/* Main Content Wrapper */}
-            <div className="flex flex-col items-center gap-6 relative z-10">
-              <div className="w-[320px] h-[220px] bg-white border border-gray-100 shadow-xl flex flex-col items-center justify-center gap-3 transition-transform duration-500 group-hover:scale-105">
-                <span className="text-xl font-bold text-gray-300 tracking-widest font-mono">UPLOAD PDF</span>
+            {/* Main Card Container - Matching loading state style */}
+            <div className="w-[520px] bg-white border border-gray-200 shadow-xl flex flex-col p-8 transition-transform duration-500 group-hover:scale-[1.02]">
+              {/* Top Row: Title / Max Size */}
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-[10px] font-bold text-ink-dim tracking-widest">UPLOAD PDF</span>
+                <span className="text-[10px] font-bold text-ink-dim tracking-widest">MAX 50MB</span>
               </div>
               
-              {/* Bottom Labels */}
-              <div className="flex justify-between items-center w-[320px] text-[10px] font-bold text-ink-dim tracking-widest">
-                <span>SUPPORTED: .PDF (MAX 50MB)</span>
-                <span>V.1.0.4-STABLE</span>
+              {/* Middle Row: Drag & Drop hint / Version */}
+              <div className="flex justify-between items-end mb-10">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-ink-dim tracking-widest mb-1">DRAG & DROP</span>
+                  <span className="text-lg font-bold text-ink-main tracking-wide">DROP FILE HERE</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-bold text-ink-dim tracking-widest block">VERSION</span>
+                  <span className="text-lg font-bold text-ink-main tracking-wide">V.1.0.4-STABLE</span>
+                </div>
               </div>
+              
+              {/* Bottom: Select Button */}
+              <button 
+                className="w-full border border-ink-dim/40 py-4 text-[11px] font-bold text-ink-dim tracking-widest hover:bg-ink-main hover:text-white hover:border-ink-main transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+              >
+                SELECT PDF TO UPLOAD
+              </button>
             </div>
             
-            {/* Stacked element - matches full height */}
-            <div className="absolute top-3 left-3 w-full h-full border border-ink-dim/20 bg-transparent -z-10 transition-transform duration-500 group-hover:translate-x-1 group-hover:translate-y-1"></div>
+            {/* Stacked element */}
+            <div className="absolute top-2 left-2 w-full h-full border border-ink-dim/20 bg-transparent -z-10 transition-transform duration-500 group-hover:translate-x-1 group-hover:translate-y-1"></div>
           </div>
 
           <input
@@ -234,15 +284,25 @@ export const Stage: React.FC<StageProps> = ({
 
   return (
     <section className={`flex-1 relative flex flex-col items-center justify-center overflow-hidden ${isSharedView ? 'p-4 pb-4' : 'p-4 pb-[240px] md:pb-[210px]'}`}>
-      {/* Hide all react-pageflip shadows */}
+      {/* Shadows visible during flip - controlled by react-pageflip */}
       <style>{`
-        .stf__outerShadow,
-        .stf__innerShadow,
+        /* Hide hard shadows completely */
         .stf__hardShadow,
         .stf__hardInnerShadow {
           display: none !important;
+        }
+        
+        /* Soft shadows - react-pageflip controls visibility during flip */
+        .stf__outerShadow,
+        .stf__innerShadow {
           opacity: 0 !important;
-          visibility: hidden !important;
+          transition: opacity 0.15s ease;
+        }
+        
+        /* Show soft shadows when they have width/height (during flip) */
+        .stf__outerShadow[style*="width"],
+        .stf__innerShadow[style*="width"] {
+          opacity: 0.5 !important;
         }
       `}</style>
 
@@ -267,8 +327,14 @@ export const Stage: React.FC<StageProps> = ({
           onLoadSuccess={onDocumentLoad}
           onLoadError={(error) => {
             console.error('PDF Load Error:', error);
+            const errorMsg = error.message || 'Failed to load PDF';
+            console.log('Setting pdfError and calling onError:', errorMsg);
+            setPdfError(errorMsg);
             if (onError) {
-              onError(error.message || 'Failed to load PDF');
+              console.log('Calling onError callback');
+              onError(errorMsg);
+            } else {
+              console.log('onError callback is undefined!');
             }
           }}
           loading={
@@ -280,52 +346,59 @@ export const Stage: React.FC<StageProps> = ({
             </div>
           }
           error={
-            <div className="flex flex-col items-center gap-2 text-red-500 font-bold">
-              <span>ERROR LOADING PDF</span>
-              <span className="text-[10px] text-ink-dim">Please try a different file</span>
-            </div>
+            <div className="hidden" />
           }
         >
           {/* Only render FlipBook when we have pages AND dimensions to prevent init errors */}
           {totalPages > 0 && bookDimensions && (
-            <HTMLFlipBook
-              key={`flipbook-${config.flipSpeed}`}
-              width={bookDimensions.width}
-              height={bookDimensions.height}
-              size="fixed"
-              minWidth={100}
-              maxWidth={2000}
-              minHeight={100}
-              maxHeight={2000}
-              maxShadowOpacity={0}
-              showCover={config.isHardCover}
-              mobileScrollSupport={true}
-              className="flipbook-container"
-              flippingTime={config.flipSpeed}
-              usePortrait={false}
-              startZIndex={0}
-              autoSize={true}
-              clickEventForward={true}
-              useMouseEvents={true}
-              swipeDistance={30}
-              showPageCorners={true}
-              disableFlipByClick={false}
-              onFlip={(e) => {
-                onPageChange(e.data);
-                setTimeout(() => setIsFlipping(false), config.flipSpeed);
+            <div 
+              className="flipbook-click-area"
+              onMouseDown={() => {
+                // Play sound on mouse down (before flip starts) when sound is enabled
+                if (config.useSound) {
+                  playFlipSound();
+                }
               }}
-              ref={bookRef}
-              startPage={currentPage}
-              drawShadow={false}
             >
-              {Array.from(new Array(totalPages), (el, index) => (
-                <PDFPage
-                  key={`page_${index + 1}`}
-                  pageNumber={index + 1}
-                  width={bookDimensions.width}
-                />
-              ))}
-            </HTMLFlipBook>
+              <HTMLFlipBook
+                key={`flipbook-${config.flipSpeed}`}
+                width={bookDimensions.width}
+                height={bookDimensions.height}
+                size="fixed"
+                minWidth={100}
+                maxWidth={2000}
+                minHeight={100}
+                maxHeight={2000}
+                maxShadowOpacity={0.5}
+                showCover={config.isHardCover}
+                mobileScrollSupport={true}
+                className="flipbook-container"
+                flippingTime={config.flipSpeed}
+                usePortrait={false}
+                startZIndex={0}
+                autoSize={true}
+                clickEventForward={true}
+                useMouseEvents={true}
+                swipeDistance={30}
+                showPageCorners={true}
+                disableFlipByClick={false}
+                onFlip={(e) => {
+                  onPageChange(e.data);
+                  setTimeout(() => setIsFlipping(false), config.flipSpeed);
+                }}
+                ref={bookRef}
+                startPage={currentPage}
+                drawShadow={true}
+              >
+                {Array.from(new Array(totalPages), (el, index) => (
+                  <PDFPage
+                    key={`page_${index + 1}`}
+                    pageNumber={index + 1}
+                    width={bookDimensions.width}
+                  />
+                ))}
+              </HTMLFlipBook>
+            </div>
           )}
         </Document>
         </div>
