@@ -73,8 +73,8 @@ export const Stage: React.FC<StageProps> = ({
 
   // Initialize audio on mount
   useEffect(() => {
-    // Use relative path for Vercel deployment compatibility
-    const audio = new Audio('./Assets/freesound_community-turning-book-page-79935 (mp3cut.net).mp3');
+    // Use root-relative path for Vercel deployment (files in public folder)
+    const audio = new Audio('/freesound_community-turning-book-page-79935 (mp3cut.net).mp3');
     audio.volume = 0.5;
     audio.preload = 'auto';
     audioRef.current = audio;
