@@ -54,10 +54,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   };
 
   return (
-    <section className="h-[220px] md:h-48 bg-[#F0F0F0]/95 border-t border-panel-border flex flex-nowrap overflow-x-auto backdrop-blur-md px-10 py-4 gap-10 shrink-0 z-40">
+    <section className="h-[220px] md:h-48 bg-[#F0F0F0]/95 border-t border-panel-border flex flex-nowrap overflow-x-auto backdrop-blur-md px-6 py-4 gap-6 shrink-0 z-40">
 
       {/* SECTION 01: SOURCE */}
-      <div className="flex-1 min-w-[200px] flex flex-col gap-3 border-r border-panel-border pr-10">
+      <div className="flex-1 min-w-[200px] flex flex-col gap-3 border-r border-panel-border pr-6">
         <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
           <span className="text-[10px] font-bold text-ink-dim tracking-widest">01 SOURCE</span>
           <span className="text-[8px] font-bold text-ink-dim tracking-widest">PDF_STREAM</span>
@@ -73,16 +73,23 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
 
         <button
           onClick={triggerUpload}
-          className="h-[60px] border border-dashed border-ink-dim flex items-center justify-center gap-3 cursor-pointer hover:bg-white/50 transition-colors group relative overflow-hidden"
+          className="h-[60px] bg-white border border-dashed border-ink-dim flex items-center justify-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors group relative overflow-hidden"
           style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)' }}
         >
-          <div className="w-4 h-4 rounded-full border border-ink-main border-t-transparent group-hover:rotate-180 transition-transform duration-500"></div>
+          <svg 
+            className="w-4 h-4 text-ink-main group-hover:scale-110 transition-transform duration-300" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
           <span className="text-[9px] font-bold tracking-widest text-ink-dim group-hover:text-ink-main">
             {pdfName ? 'REPLACE FILE' : 'UPLOAD FILE'}
           </span>
         </button>
 
-        <div className="grid grid-cols-2 gap-2 mt-auto">
+        <div className="grid grid-cols-2 gap-2">
           <div className="flex flex-col">
             <span className="text-[8px] font-bold text-ink-dim tracking-widest mb-1">FILENAME</span>
             <span className="text-xs text-ink-main truncate font-bold" title={pdfName || 'NONE'}>
@@ -97,7 +104,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
       </div>
 
       {/* SECTION 02: PHYSICS */}
-      <div className="flex-1 min-w-[200px] flex flex-col justify-between border-r border-panel-border pr-10">
+      <div className="flex-1 min-w-[200px] flex flex-col justify-between border-r border-panel-border pr-6">
         <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
           <span className="text-[10px] font-bold text-ink-dim tracking-widest">02 PHYSICS</span>
         </div>
@@ -143,25 +150,45 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
         </div>
       </div>
 
-      {/* SECTION 03: DEPLOY */}
+      {/* SECTION 03: SHARE */}
       <div className="flex-1 min-w-[200px] flex flex-col gap-3">
         <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
-          <span className="text-[10px] font-bold text-ink-dim tracking-widest">03 DEPLOY</span>
+          <span className="text-[10px] font-bold text-ink-dim tracking-widest">03 SHARE</span>
         </div>
 
-        <div className="border border-ink-light p-1.5 bg-white">
+        <div 
+          className="h-[60px] bg-white border border-dashed border-ink-dim flex items-center justify-between gap-3 px-4 cursor-pointer hover:bg-gray-50 transition-colors group relative overflow-hidden"
+          style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)' }}
+          onClick={() => {
+            navigator.clipboard.writeText(deployUrl);
+            setHasCopied(true);
+            setTimeout(() => setHasCopied(false), 2000);
+          }}
+        >
           <input
             type="text"
             value={deployUrl}
             readOnly
-            className="w-full text-[10px] text-ink-dim font-mono outline-none bg-transparent"
+            className="flex-1 text-[10px] text-ink-dim font-mono outline-none bg-transparent cursor-pointer"
           />
+          <svg 
+            className="w-4 h-4 text-ink-main group-hover:scale-110 transition-transform duration-300 shrink-0" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            {hasCopied ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            )}
+          </svg>
         </div>
 
         <button
           onClick={handleGenerate}
           disabled={!pdfName || isGenerating}
-          className="w-full py-2 bg-ink-main text-white text-[10px] font-bold tracking-wider hover:bg-ink-dim transition-colors flex justify-between px-3 items-center mt-auto disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-2 bg-ink-main text-white text-[10px] font-bold tracking-wider hover:bg-ink-dim transition-colors flex justify-between px-3 items-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span>{isGenerating ? 'GENERATING...' : hasCopied ? 'URL COPIED!' : 'GENERATE & COPY'}</span>
           <span className={isGenerating ? 'animate-spin' : ''}>{isGenerating ? '◌' : '↗'}</span>

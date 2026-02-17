@@ -5,6 +5,7 @@ import { Stage } from './components/Stage';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
 import { FlipBookDemo } from './components/FlipBookDemo';
+import { LandingPage } from './components/LandingPage';
 import { Config, DefaultConfig } from './types';
 import { getPDF } from './lib/supabase';
 
@@ -43,11 +44,9 @@ export default function App() {
   const backgroundStyle: React.CSSProperties = {
     backgroundColor: '#F0F0F0',
     backgroundImage: `
-      radial-gradient(circle, #D6D6D6 1px, transparent 1px),
-      linear-gradient(to right, rgba(200,200,200,0.3) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(200,200,200,0.3) 1px, transparent 1px)
+      radial-gradient(circle, #D6D6D6 1px, transparent 1px)
     `,
-    backgroundSize: '20px 20px, 100px 100px, 100px 100px',
+    backgroundSize: '20px 20px',
   };
 
   // Set initialized flag after mount to enable transitions
@@ -286,6 +285,7 @@ export default function App() {
             onRetry={handleRetry}
             onDismiss={handleDismissError}
             incidentLogs={incidentLogs}
+            hasInitialized={hasInitialized}
           />
         )}
 
@@ -297,11 +297,12 @@ export default function App() {
             currentProcessingPage={processingPage}
             onAbort={handleAbortProcessing}
             incidentLogs={incidentLogs}
+            hasInitialized={hasInitialized}
           />
         )}
 
-        {/* Stage - Hidden during loading and error */}
-        {!isLoading && !hasError && (
+        {/* Stage - Only render when PDF is loaded */}
+        {!isLoading && !hasError && pdfFile && (
           <Stage
             pdfFile={pdfFile}
             config={config}
@@ -309,7 +310,6 @@ export default function App() {
             onPageChange={handlePageChange}
             currentPage={currentPage}
             totalPages={totalPages}
-            onUpload={handleUpload}
             onError={handleError}
             isSharedView={isSharedView}
           />
@@ -325,75 +325,15 @@ export default function App() {
               onPageChange={handlePageChange}
               currentPage={currentPage}
               totalPages={totalPages}
-              onUpload={handleUpload}
               onError={handleError}
               isSharedView={isSharedView}
             />
           </div>
         )}
 
-        {/* Quick Start Guide - Shows when no file uploaded (hidden in shared view) */}
-        {!isSharedView && (
-          <div className={`absolute bottom-0 left-0 right-0 z-40 ${hasInitialized ? 'transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)]' : ''} ${!pdfFile ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
-            <section className="h-[220px] md:h-48 bg-[#F0F0F0]/95 border-t border-panel-border backdrop-blur-md px-6 py-4 shrink-0">
-              <div className="h-full flex flex-col">
-                {/* Header */}
-                <div className="flex items-center gap-2 pb-3 border-b border-ink-light">
-                  <span className="text-[10px] font-bold text-ink-dim tracking-widest">QUICK START GUIDE</span>
-                </div>
-                
-                {/* Steps - Horizontal Layout */}
-                <div className="flex-1 flex items-center justify-center gap-8 md:gap-16 mt-4">
-                  {/* Step 01: UPLOAD */}
-                  <div className="flex items-center gap-3 text-left max-w-[220px]">
-                    <div className="w-7 h-7 border-2 border-ink-main flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-ink-main">01</span>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-ink-main tracking-widest mb-1">UPLOAD</h3>
-                      <p className="text-[10px] text-ink-dim leading-relaxed">Drag any PDF document into the workspace to start the engine.</p>
-                    </div>
-                  </div>
-
-                  {/* Connector Arrow */}
-                  <div className="hidden md:flex items-center text-ink-light">
-                    <svg width="24" height="12" viewBox="0 0 24 12" fill="none" className="opacity-50">
-                      <path d="M0 6H22M22 6L17 1M22 6L17 11" stroke="currentColor" strokeWidth="1.5"/>
-                    </svg>
-                  </div>
-
-                  {/* Step 02: CONFIGURE */}
-                  <div className="flex items-center gap-3 text-left max-w-[220px]">
-                    <div className="w-7 h-7 border-2 border-ink-main flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-ink-main">02</span>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-ink-main tracking-widest mb-1">CONFIGURE</h3>
-                      <p className="text-[10px] text-ink-dim leading-relaxed">Adjust physics, shadows, and flip mechanics in the lower panel.</p>
-                    </div>
-                  </div>
-
-                  {/* Connector Arrow */}
-                  <div className="hidden md:flex items-center text-ink-light">
-                    <svg width="24" height="12" viewBox="0 0 24 12" fill="none" className="opacity-50">
-                      <path d="M0 6H22M22 6L17 1M22 6L17 11" stroke="currentColor" strokeWidth="1.5"/>
-                    </svg>
-                  </div>
-
-                  {/* Step 03: DEPLOY */}
-                  <div className="flex items-center gap-3 text-left max-w-[220px]">
-                    <div className="w-7 h-7 border-2 border-ink-main flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-ink-main">03</span>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-ink-main tracking-widest mb-1">DEPLOY</h3>
-                      <p className="text-[10px] text-ink-dim leading-relaxed">Generate a unique URL to share your interactive flipbook.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
+        {/* Landing Page - Shows when no file uploaded (hidden in shared view) */}
+        {!isSharedView && !pdfFile && !isLoading && !hasError && (
+          <LandingPage onUpload={handleUpload} />
         )}
 
         {/* Toolbar - Shows only after file uploaded AND processing complete AND no error (hidden in shared view) */}

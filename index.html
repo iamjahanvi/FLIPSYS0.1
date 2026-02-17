@@ -6,14 +6,15 @@
     <title>PDF2FLIP // SYS.01</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
-              mono: ['"Space Mono"', 'monospace'],
+              sans: ['"Spline Sans"', 'system-ui', 'sans-serif'],
+              mono: ['"Spline Sans Mono"', 'monospace'],
             },
             colors: {
               ink: {
@@ -36,6 +37,17 @@
       }
     </script>
     <style>
+      /* Global letter spacing - body default */
+      body {
+        letter-spacing: 0em;
+      }
+      
+      /* Tighter letter spacing for titles and headings */
+      h1, h2, h3, h4, h5, h6,
+      .text-2xl, .text-xl, .text-lg {
+        letter-spacing: -0.02em;
+      }
+      
       /* Custom Scrollbar for a technical feel */
       ::-webkit-scrollbar {
         width: 6px;

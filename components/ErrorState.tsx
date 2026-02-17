@@ -9,6 +9,7 @@ interface ErrorStateProps {
   onRetry: () => void;
   onDismiss: () => void;
   incidentLogs: string[];
+  hasInitialized?: boolean;
 }
 
 export const ErrorState: React.FC<ErrorStateProps> = ({
@@ -20,6 +21,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   onRetry,
   onDismiss,
   incidentLogs,
+  hasInitialized = false,
 }) => {
 
   return (
@@ -76,7 +78,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       </section>
 
       {/* Bottom Toolbar - Error Details */}
-      <section className="h-[220px] md:h-48 bg-[#F0F0F0]/95 border-t border-panel-border flex flex-nowrap overflow-x-auto backdrop-blur-md px-6 py-4 gap-6 shrink-0">
+      <section className={`h-[220px] md:h-48 bg-[#F0F0F0]/95 border-t border-panel-border flex flex-nowrap overflow-x-auto backdrop-blur-md px-6 py-4 gap-6 shrink-0 ${hasInitialized ? 'transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] translate-y-0 opacity-100' : ''}`}>
         
         {/* Section 01: Incident Log */}
         <div className="flex-1 min-w-[200px] flex flex-col gap-3 border-r border-panel-border pr-6">

@@ -11,7 +11,6 @@ interface StageProps {
   onPageChange: (page: number) => void;
   currentPage: number;
   totalPages: number;
-  onUpload: (file: File) => void;
   onError?: (errorMessage: string) => void;
   isSharedView?: boolean;
 }
@@ -57,15 +56,12 @@ export const Stage: React.FC<StageProps> = ({
   onPageChange,
   currentPage,
   totalPages,
-  onUpload,
   onError,
   isSharedView = false
 }) => {
   const bookRef = useRef<any>(null);
   const [scale, setScale] = useState(1);
-  const [isDragging, setIsDragging] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [bookDimensions, setBookDimensions] = useState<{ width: number; height: number } | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -188,98 +184,10 @@ export const Stage: React.FC<StageProps> = ({
     }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type === 'application/pdf') {
-      onUpload(file);
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type === 'application/pdf') {
-      onUpload(file);
-    }
-  };
-
   if (!pdfFile) {
+    // LandingPage handles upload UI - Stage just renders empty when no PDF
     return (
-      <section className="flex-1 w-full h-full p-6 pb-[240px] md:pb-[210px] flex flex-col relative z-10">
-        <div
-          className="flex-1 w-full border-2 border-dashed border-gray-400 rounded-none flex flex-col items-center justify-center gap-10 relative"
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          style={{
-            borderColor: isDragging ? '#FF6B00' : '#9CA3AF',
-            backgroundColor: isDragging ? 'rgba(255, 107, 0, 0.05)' : 'transparent',
-          }}
-        >
-          {/* Central Card Graphic - Now Clickable */}
-          <div 
-            className="relative group cursor-pointer"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {/* Main Card Container - Matching loading state style */}
-            <div className="w-[520px] bg-white border border-gray-200 shadow-xl flex flex-col p-8 transition-transform duration-500 group-hover:scale-[1.02]">
-              {/* Top Row: Title / Max Size */}
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-[10px] font-bold text-ink-dim tracking-widest">UPLOAD PDF</span>
-                <span className="text-[10px] font-bold text-ink-dim tracking-widest">MAX 50MB</span>
-              </div>
-              
-              {/* Middle Row: Drag & Drop hint / Version */}
-              <div className="flex justify-between items-end mb-10">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-ink-dim tracking-widest mb-1">DRAG & DROP</span>
-                  <span className="text-lg font-bold text-ink-main tracking-wide">DROP FILE HERE</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-bold text-ink-dim tracking-widest block">VERSION</span>
-                  <span className="text-lg font-bold text-ink-main tracking-wide">V.1.0.4-STABLE</span>
-                </div>
-              </div>
-              
-              {/* Bottom: Select Button */}
-              <button 
-                className="w-full border border-ink-dim/40 py-4 text-[11px] font-bold text-ink-dim tracking-widest hover:bg-ink-main hover:text-white hover:border-ink-main transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fileInputRef.current?.click();
-                }}
-              >
-                SELECT PDF TO UPLOAD
-              </button>
-            </div>
-            
-            {/* Stacked element */}
-            <div className="absolute top-2 left-2 w-full h-full border border-ink-dim/20 bg-transparent -z-10 transition-transform duration-500 group-hover:translate-x-1 group-hover:translate-y-1"></div>
-          </div>
-
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            accept="application/pdf"
-            onChange={handleFileSelect}
-          />
-        </div>
-      </section>
+      <section className="flex-1 w-full h-full" />
     );
   }
 

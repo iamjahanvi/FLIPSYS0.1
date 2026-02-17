@@ -6,6 +6,7 @@ interface LoadingStateProps {
   currentProcessingPage: number;
   onAbort: () => void;
   incidentLogs: string[];
+  hasInitialized?: boolean;
 }
 
 export const LoadingState: React.FC<LoadingStateProps> = ({
@@ -14,10 +15,17 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
   currentProcessingPage,
   onAbort,
   incidentLogs,
+  hasInitialized = false,
 }) => {
   const [cpuUsage, setCpuUsage] = useState(42);
   const [vramUsage, setVramUsage] = useState(30);
   const [elapsedTime, setElapsedTime] = useState(0);
+  
+  // OPS Health metrics
+  const [latency, setLatency] = useState(12.50);
+  const [throughput, setThroughput] = useState(8.4);
+  const [bufferLevel, setBufferLevel] = useState(3);
+  const [processingStatus, setProcessingStatus] = useState<'IDLE' | 'SYNCING' | 'ACTIVE'>('SYNCING');
 
   const calculatedProgress = totalPages > 0 ? (currentProcessingPage / totalPages) * 100 : 0;
   const progress = Math.max(calculatedProgress, 5); // Show at least 5% progress initially
@@ -38,6 +46,37 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
     }, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  // Simulate OPS Health metrics during processing
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Update latency (fluctuates between 8-25ms)
+      setLatency(8 + Math.random() * 17);
+      
+      // Update throughput based on actual processing speed
+      const calculatedThroughput = currentProcessingPage > 0 && elapsedTime > 0 
+        ? (currentProcessingPage / elapsedTime) * 2.5 + Math.random() * 2
+        : 5 + Math.random() * 5;
+      setThroughput(Math.max(0.5, calculatedThroughput));
+      
+      // Update buffer level (cycles 1-5)
+      setBufferLevel(prev => {
+        const change = Math.random() > 0.5 ? 1 : -1;
+        const newLevel = prev + change;
+        return Math.max(1, Math.min(5, newLevel));
+      });
+      
+      // Update processing status based on progress
+      if (currentProcessingPage === 0) {
+        setProcessingStatus('SYNCING');
+      } else if (currentProcessingPage >= (totalPages || 1)) {
+        setProcessingStatus('IDLE');
+      } else {
+        setProcessingStatus('ACTIVE');
+      }
+    }, 800);
+    return () => clearInterval(interval);
+  }, [currentProcessingPage, elapsedTime, totalPages]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -98,7 +137,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
       </section>
 
       {/* Bottom Toolbar - Processing Stats */}
-      <section className="h-[220px] md:h-48 bg-[#F0F0F0]/95 border-t border-panel-border flex flex-nowrap overflow-x-auto backdrop-blur-md px-6 py-4 gap-6 shrink-0">
+      <section className={`h-[220px] md:h-48 bg-[#F0F0F0]/95 border-t border-panel-border flex flex-nowrap overflow-x-auto backdrop-blur-md px-6 py-4 gap-6 shrink-0 ${hasInitialized ? 'transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] translate-y-0 opacity-100' : ''}`}>
         
         {/* Section 01: Incident Log */}
         <div className="flex-1 min-w-[200px] flex flex-col gap-3 border-r border-panel-border pr-6">
@@ -155,10 +194,39 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
         <div className="flex-1 min-w-[200px] flex flex-col gap-3">
           <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
             <span className="text-[10px] font-bold text-ink-dim tracking-widest">03 OPS_HEALTH</span>
+            <span className={`text-[9px] font-bold tracking-widest ${processingStatus === 'ACTIVE' ? 'text-green-600' : processingStatus === 'SYNCING' ? 'text-amber-600' : 'text-ink-dim'}`}>{processingStatus}</span>
           </div>
-          <div className="flex-1 border border-gray-300 flex flex-col items-center justify-center">
-            <span className="text-3xl font-bold text-ink-main">0.00ms</span>
-            <span className="text-[8px] font-bold text-ink-dim tracking-widest mt-1">LATENCY_SYNC</span>
+          <div className="flex-1 border border-gray-300 flex flex-col">
+            {/* Latency Metric */}
+            <div className="flex-1 flex flex-col items-center justify-center border-b border-gray-200">
+              <span className="text-[10px] font-bold text-ink-dim tracking-widest mb-1">LATENCY</span>
+              <span className="text-2xl font-bold text-ink-main">{latency.toFixed(2)}ms</span>
+              <div className="w-16 h-1 bg-gray-200 mt-2 overflow-hidden">
+                <div 
+                  className="h-full bg-green-500 transition-all duration-300"
+                  style={{ width: `${Math.min((latency / 50) * 100, 100)}%` }}
+                ></div>
+              </div>
+            </div>
+            {/* Throughput Metric */}
+            <div className="flex-1 flex flex-col items-center justify-center border-b border-gray-200">
+              <span className="text-[10px] font-bold text-ink-dim tracking-widest mb-1">THROUGHPUT</span>
+              <span className="text-2xl font-bold text-ink-main">{throughput.toFixed(1)}</span>
+              <span className="text-[8px] font-bold text-ink-dim tracking-widest">PAGES/SEC</span>
+            </div>
+            {/* Buffer Status */}
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <span className="text-[10px] font-bold text-ink-dim tracking-widest mb-1">BUFFER</span>
+              <div className="flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className={`w-2 h-3 ${i < bufferLevel ? 'bg-green-500' : 'bg-gray-200'} transition-all duration-200`}
+                  ></div>
+                ))}
+              </div>
+              <span className="text-[8px] font-bold text-ink-dim tracking-widest mt-1">{bufferLevel * 20}%</span>
+            </div>
           </div>
         </div>
       </section>
