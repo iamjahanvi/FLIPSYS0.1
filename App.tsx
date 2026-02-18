@@ -285,6 +285,7 @@ export default function App() {
         {isLoading && pdfFile && !hasError && (
           <LoadingState
             fileName={pdfFile.name}
+            fileSize={pdfFile.size}
             totalPages={totalPages}
             currentProcessingPage={processingPage}
             onAbort={handleAbortProcessing}

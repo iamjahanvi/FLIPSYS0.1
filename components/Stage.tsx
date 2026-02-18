@@ -259,35 +259,34 @@ export const Stage: React.FC<StageProps> = ({
               }}
             >
               <HTMLFlipBook
-                key={`flipbook-${config.flipSpeed}`}
-                width={bookDimensions.width}
-                height={bookDimensions.height}
-                size="fixed"
-                minWidth={100}
-                maxWidth={2000}
-                minHeight={100}
-                maxHeight={2000}
-                maxShadowOpacity={0.5}
-                showCover={config.isHardCover}
-                mobileScrollSupport={true}
-                className="flipbook-container"
-                flippingTime={config.flipSpeed}
-                usePortrait={false}
-                startZIndex={0}
-                autoSize={true}
-                clickEventForward={true}
-                useMouseEvents={true}
-                swipeDistance={30}
-                showPageCorners={true}
-                disableFlipByClick={false}
-                onFlip={(e) => {
-                  onPageChange(e.data);
-                  setTimeout(() => setIsFlipping(false), config.flipSpeed);
-                }}
-                ref={bookRef}
-                startPage={currentPage}
-                drawShadow={true}
-              >
+                  key={`flipbook-${config.flipSpeed}`}
+                  width={bookDimensions.width}
+                  height={bookDimensions.height}
+                  size="fixed"
+                  minWidth={100}
+                  maxWidth={2000}
+                  minHeight={100}
+                  maxHeight={2000}
+                  maxShadowOpacity={0.5}
+                  showCover={config.isHardCover}
+                  mobileScrollSupport={true}
+                  className="flipbook-container"
+                  flippingTime={config.flipSpeed}
+                  usePortrait={false}
+                  startZIndex={0}
+                  autoSize={true}
+                  clickEventForward={true}
+                  useMouseEvents={true}
+                  swipeDistance={30}
+                  showPageCorners={true}
+                  disableFlipByClick={false}
+                  onFlip={(e) => {
+                    onPageChange(e.data);
+                    setTimeout(() => setIsFlipping(false), config.flipSpeed);
+                  } }
+                  ref={bookRef}
+                  startPage={currentPage}
+                  drawShadow={true} style={undefined}>
                 {Array.from(new Array(totalPages), (el, index) => (
                   <PDFPage
                     key={`page_${index + 1}`}

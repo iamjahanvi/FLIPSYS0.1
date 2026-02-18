@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 interface LoadingStateProps {
   fileName: string;
+  fileSize?: number;
   totalPages: number;
   currentProcessingPage: number;
   onAbort: () => void;
@@ -11,6 +12,7 @@ interface LoadingStateProps {
 
 export const LoadingState: React.FC<LoadingStateProps> = ({
   fileName,
+  fileSize,
   totalPages,
   currentProcessingPage,
   onAbort,
@@ -21,10 +23,6 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
   const [vramUsage, setVramUsage] = useState(30);
   const [elapsedTime, setElapsedTime] = useState(0);
   
-  // OPS Health metrics
-  const [latency, setLatency] = useState(12.50);
-  const [throughput, setThroughput] = useState(8.4);
-  const [bufferLevel, setBufferLevel] = useState(3);
   const [processingStatus, setProcessingStatus] = useState<'IDLE' | 'SYNCING' | 'ACTIVE'>('SYNCING');
 
   const calculatedProgress = totalPages > 0 ? (currentProcessingPage / totalPages) * 100 : 0;
@@ -47,41 +45,33 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Simulate OPS Health metrics during processing
+  // Update processing status based on progress
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Update latency (fluctuates between 8-25ms)
-      setLatency(8 + Math.random() * 17);
-      
-      // Update throughput based on actual processing speed
-      const calculatedThroughput = currentProcessingPage > 0 && elapsedTime > 0 
-        ? (currentProcessingPage / elapsedTime) * 2.5 + Math.random() * 2
-        : 5 + Math.random() * 5;
-      setThroughput(Math.max(0.5, calculatedThroughput));
-      
-      // Update buffer level (cycles 1-5)
-      setBufferLevel(prev => {
-        const change = Math.random() > 0.5 ? 1 : -1;
-        const newLevel = prev + change;
-        return Math.max(1, Math.min(5, newLevel));
-      });
-      
-      // Update processing status based on progress
-      if (currentProcessingPage === 0) {
-        setProcessingStatus('SYNCING');
-      } else if (currentProcessingPage >= (totalPages || 1)) {
-        setProcessingStatus('IDLE');
-      } else {
-        setProcessingStatus('ACTIVE');
-      }
-    }, 800);
-    return () => clearInterval(interval);
-  }, [currentProcessingPage, elapsedTime, totalPages]);
+    if (currentProcessingPage === 0) {
+      setProcessingStatus('SYNCING');
+    } else if (currentProcessingPage >= (totalPages || 1)) {
+      setProcessingStatus('IDLE');
+    } else {
+      setProcessingStatus('ACTIVE');
+    }
+  }, [currentProcessingPage, totalPages]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let size = bytes;
+    let unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    return `${size.toFixed(1)} ${units[unitIndex]}`;
   };
 
   const estimatedRemaining = totalPages > 0 && currentProcessingPage > 0 
@@ -190,43 +180,24 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
           </div>
         </div>
 
-        {/* Section 03: OPS Health */}
+        {/* Section 03: OPS Health - File Size */}
         <div className="flex-1 min-w-[200px] flex flex-col gap-3">
           <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
             <span className="text-[10px] font-bold text-ink-dim tracking-widest">03 OPS_HEALTH</span>
-            <span className={`text-[9px] font-bold tracking-widest ${processingStatus === 'ACTIVE' ? 'text-green-600' : processingStatus === 'SYNCING' ? 'text-amber-600' : 'text-ink-dim'}`}>{processingStatus}</span>
+            <span className={`text-[10px] font-bold tracking-widest ${processingStatus === 'ACTIVE' ? 'text-green-600' : processingStatus === 'SYNCING' ? 'text-amber-600' : 'text-ink-dim'}`}>
+              {processingStatus}
+            </span>
           </div>
-          <div className="flex-1 border border-gray-300 flex flex-col">
-            {/* Latency Metric */}
-            <div className="flex-1 flex flex-col items-center justify-center border-b border-gray-200">
-              <span className="text-[10px] font-bold text-ink-dim tracking-widest mb-1">LATENCY</span>
-              <span className="text-2xl font-bold text-ink-main">{latency.toFixed(2)}ms</span>
-              <div className="w-16 h-1 bg-gray-200 mt-2 overflow-hidden">
-                <div 
-                  className="h-full bg-green-500 transition-all duration-300"
-                  style={{ width: `${Math.min((latency / 50) * 100, 100)}%` }}
-                ></div>
-              </div>
-            </div>
-            {/* Throughput Metric */}
-            <div className="flex-1 flex flex-col items-center justify-center border-b border-gray-200">
-              <span className="text-[10px] font-bold text-ink-dim tracking-widest mb-1">THROUGHPUT</span>
-              <span className="text-2xl font-bold text-ink-main">{throughput.toFixed(1)}</span>
-              <span className="text-[8px] font-bold text-ink-dim tracking-widest">PAGES/SEC</span>
-            </div>
-            {/* Buffer Status */}
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <span className="text-[10px] font-bold text-ink-dim tracking-widest mb-1">BUFFER</span>
-              <div className="flex gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <div 
-                    key={i} 
-                    className={`w-2 h-3 ${i < bufferLevel ? 'bg-green-500' : 'bg-gray-200'} transition-all duration-200`}
-                  ></div>
-                ))}
-              </div>
-              <span className="text-[8px] font-bold text-ink-dim tracking-widest mt-1">{bufferLevel * 20}%</span>
-            </div>
+          <div className="flex-1 flex flex-col items-center justify-center border border-gray-200 bg-white">
+            <span className="text-[10px] font-bold text-ink-dim tracking-widest uppercase mb-2">
+              File Size
+            </span>
+            <span className="text-4xl font-bold text-ink-main">
+              {formatFileSize(fileSize)}
+            </span>
+            <span className="text-[9px] text-ink-dim mt-1">
+              PDF DOCUMENT
+            </span>
           </div>
         </div>
       </section>

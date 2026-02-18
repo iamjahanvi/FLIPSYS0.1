@@ -71,7 +71,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
               onClick={onDismiss}
               className="flex-1 py-3 bg-transparent border border-gray-300 text-ink-dim text-[10px] font-bold tracking-widest uppercase hover:bg-gray-100 hover:text-ink-main transition-colors"
             >
-              VIEW_DUMP
+              Abort_and_Revert
             </button>
           </div>
         </div>
