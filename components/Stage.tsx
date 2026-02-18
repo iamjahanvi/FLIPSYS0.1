@@ -35,11 +35,7 @@ const PDFPage = React.forwardRef<HTMLDivElement, any>((props, ref) => {
           renderTextLayer={false}
           renderAnnotationLayer={false}
           className="h-full w-full"
-          loading={
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-ink-light border-t-ink-main rounded-full animate-spin"></div>
-            </div>
-          }
+          loading={null}
         />
 
 
@@ -246,14 +242,7 @@ export const Stage: React.FC<StageProps> = ({
               console.log('onError callback is undefined!');
             }
           }}
-          loading={
-            <div className="flex flex-col items-center justify-center gap-4">
-              <div className="w-12 h-12 border-4 border-ink-dim border-t-ink-main rounded-full animate-spin"></div>
-              <div className="flex items-center gap-2 text-xs font-bold text-ink-dim animate-pulse">
-                DECODING STREAM...
-              </div>
-            </div>
-          }
+          loading={null}
           error={
             <div className="hidden" />
           }

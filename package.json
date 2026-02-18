@@ -1,5 +1,5 @@
 {
-  "name": "pdf2flip-//-sys.01",
+  "name": "pdf2flip-sys.01",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -20,6 +20,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"

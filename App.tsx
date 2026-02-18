@@ -4,7 +4,6 @@ import { Toolbar } from './components/Toolbar';
 import { Stage } from './components/Stage';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
-import { FlipBookDemo } from './components/FlipBookDemo';
 import { LandingPage } from './components/LandingPage';
 import { Config, DefaultConfig } from './types';
 import { getPDF } from './lib/supabase';
@@ -14,13 +13,6 @@ import { pdfjs } from 'react-pdf';
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export default function App() {
-  // Check for demo mode via URL parameter
-  const isDemoMode = window.location.search.includes('demo=flipbook');
-  
-  if (isDemoMode) {
-    return <FlipBookDemo />;
-  }
-
   // Check if this is a shared PDF view (read-only mode)
   const isSharedView = window.location.search.includes('share=');
 
@@ -38,7 +30,7 @@ export default function App() {
   // Shared incident logs between LoadingState and ErrorState
   const [incidentLogs, setIncidentLogs] = useState<string[]>([]);
   const [isErrorLogShown, setIsErrorLogShown] = useState<boolean>(false);
-  const logTimersRef = React.useRef<NodeJS.Timeout[]>([]);
+  const logTimersRef = React.useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Background pattern style from the design
   const backgroundStyle: React.CSSProperties = {
