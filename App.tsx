@@ -12,9 +12,24 @@ import { getPDF } from './lib/supabase';
 import { pdfjs } from 'react-pdf';
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
+const getShareIdFromLocation = (): string | null => {
+  const url = new URL(window.location.href);
+  const searchShareId = url.searchParams.get('share')?.trim();
+  if (searchShareId) return searchShareId;
+
+  const rawHash = url.hash.startsWith('#') ? url.hash.slice(1) : url.hash;
+  if (!rawHash) return null;
+
+  const hashQuery = rawHash.includes('?') ? rawHash.split('?')[1] : rawHash;
+  const hashShareId = new URLSearchParams(hashQuery).get('share')?.trim();
+  return hashShareId || null;
+};
+
 export default function App() {
-  // Check if this is a shared PDF view (read-only mode)
-  const isSharedView = window.location.search.includes('share=');
+  // Shared mode is derived from URL query/hash once and kept in state to prevent UI mode flicker.
+  const [shareId, setShareId] = useState<string | null>(() => getShareIdFromLocation());
+  const [isRouteResolved, setIsRouteResolved] = useState<boolean>(false);
+  const isSharedView = Boolean(shareId);
 
   const [config, setConfig] = useState<Config>(DefaultConfig);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -31,6 +46,10 @@ export default function App() {
   const [incidentLogs, setIncidentLogs] = useState<string[]>([]);
   const [isErrorLogShown, setIsErrorLogShown] = useState<boolean>(false);
   const logTimersRef = React.useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [sharedLoadState, setSharedLoadState] = useState<'idle' | 'fetching' | 'error' | 'ready'>(
+    shareId ? 'fetching' : 'idle'
+  );
+  const [sharedLoadError, setSharedLoadError] = useState<string | null>(null);
 
   // Background pattern style from the design
   const backgroundStyle: React.CSSProperties = {
@@ -45,6 +64,33 @@ export default function App() {
   useEffect(() => {
     setHasInitialized(true);
   }, []);
+
+  useEffect(() => {
+    const syncShareId = () => {
+      setShareId(getShareIdFromLocation());
+      setIsRouteResolved(true);
+    };
+
+    syncShareId();
+    window.addEventListener('popstate', syncShareId);
+    window.addEventListener('hashchange', syncShareId);
+
+    return () => {
+      window.removeEventListener('popstate', syncShareId);
+      window.removeEventListener('hashchange', syncShareId);
+    };
+  }, []);
+
+  const clearLogTimers = () => {
+    logTimersRef.current.forEach(clearTimeout);
+    logTimersRef.current = [];
+  };
+
+  useEffect(() => {
+    return () => {
+      clearLogTimers();
+    };
+  }, []);
   
   // Switch to error state when error log is shown
   useEffect(() => {
@@ -56,37 +102,64 @@ export default function App() {
 
   // Load shared PDF from URL parameter
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const shareId = params.get('share');
-    
-    if (shareId && !pdfFile) {
-      setIsLoading(true);
-      getPDF(shareId).then((result) => {
-        if (result) {
-          // Apply saved config if available
-          if (result.config) {
-            setConfig(prev => ({
-              ...prev,
-              ...result.config,
-            }));
-          }
-          fetch(result.url)
-            .then(res => res.blob())
-            .then(blob => {
-              const file = new File([blob], result.fileName, { type: 'application/pdf' });
-              handleUpload(file);
-            })
-            .catch(() => {
-              setIsLoading(false);
-              alert('Failed to load shared PDF');
-            });
-        } else {
-          setIsLoading(false);
-          alert('Shared PDF not found');
-        }
-      });
+    if (!isRouteResolved) return;
+
+    if (!isSharedView || !shareId) {
+      setSharedLoadState('idle');
+      setSharedLoadError(null);
+      return;
     }
-  }, []);
+
+    setSharedLoadState('fetching');
+    setSharedLoadError(null);
+
+    let cancelled = false;
+
+    const loadSharedPDF = async () => {
+      try {
+        const result = await getPDF(shareId);
+        if (!result) throw new Error('Shared PDF not found');
+
+        if (result.config) {
+          setConfig(prev => ({
+            ...prev,
+            ...result.config,
+          }));
+        }
+
+        const response = await fetch(result.url);
+        if (!response.ok) throw new Error('Failed to download shared PDF');
+        const blob = await response.blob();
+        if (cancelled) return;
+
+        const file = new File([blob], result.fileName, { type: 'application/pdf' });
+        clearLogTimers();
+        setPdfFile(file);
+        setCurrentPage(0);
+        setIsReady(false);
+        setIsLoading(false);
+        setHasError(false);
+        setErrorInfo(null);
+        setProcessingPage(0);
+        setIncidentLogs([]);
+        setIsErrorLogShown(false);
+        setTotalPages(0);
+        setSharedLoadState('ready');
+      } catch (err: any) {
+        if (cancelled) return;
+        setIsLoading(false);
+        setPdfFile(null);
+        setSharedLoadState('error');
+        setSharedLoadError(err?.message || 'Failed to load shared PDF');
+      }
+    };
+
+    loadSharedPDF();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isRouteResolved, isSharedView, shareId]);
 
   const handleUpload = (file: File) => {
     setPdfFile(file);
@@ -99,15 +172,16 @@ export default function App() {
     setIncidentLogs([]);
     setIsErrorLogShown(false);
     
-    // Start incident log animation
-    startIncidentLogAnimation(false);
+    // Start incident log animation only for non-shared interactive uploads.
+    if (!isSharedView) {
+      startIncidentLogAnimation(false);
+    }
   };
   
   // Shared incident log animation for both loading and error states
   const startIncidentLogAnimation = (isError: boolean) => {
     // Clear any existing timers
-    logTimersRef.current.forEach(clearTimeout);
-    logTimersRef.current = [];
+    clearLogTimers();
     
     const getTimestamp = () => {
       const now = new Date();
@@ -149,12 +223,8 @@ export default function App() {
 
   const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setTotalPages(numPages);
-    
-    // Check if this is a shared PDF (from URL parameter)
-    const params = new URLSearchParams(window.location.search);
-    const isSharedPDF = params.get('share') !== null;
-    
-    if (isSharedPDF) {
+
+    if (isSharedView) {
       // Skip loading animation for shared PDFs - show immediately
       setIsLoading(false);
       setIsReady(true);
@@ -177,10 +247,13 @@ export default function App() {
   };
 
   const handleAbortProcessing = () => {
+    clearLogTimers();
     setIsLoading(false);
     setPdfFile(null);
     setTotalPages(0);
     setProcessingPage(0);
+    setIncidentLogs([]);
+    setIsErrorLogShown(false);
   };
 
   const handleError = (errorMessage: string) => {
@@ -198,8 +271,7 @@ export default function App() {
     });
     
     // Clear any pending log timers to stop adding normal logs
-    logTimersRef.current.forEach(clearTimeout);
-    logTimersRef.current = [];
+    clearLogTimers();
     
     // Add error logs to existing logs (don't clear)
     const getTimestamp = () => {
@@ -236,6 +308,7 @@ export default function App() {
   };
 
   const handleDismissError = () => {
+    clearLogTimers();
     setHasError(false);
     setErrorInfo(null);
     setPdfFile(null);
@@ -244,13 +317,20 @@ export default function App() {
     setIsErrorLogShown(false);
   };
 
+  const showSharedLoader =
+    isRouteResolved &&
+    isSharedView &&
+    !hasError &&
+    sharedLoadState !== 'error' &&
+    (!pdfFile || totalPages === 0);
+
   return (
     <div className={`h-screen w-screen flex flex-col font-mono text-ink-main overflow-hidden select-none ${isSharedView ? 'bg-[#E6E6E6]' : ''}`} style={isSharedView ? undefined : backgroundStyle}>
       {/* Header - simplified for shared view */}
-      {!isSharedView && <Header isReady={isReady} isLoading={isLoading} hasError={hasError} />}
+      {isRouteResolved && !isSharedView && <Header isReady={isReady} isLoading={isLoading} hasError={hasError} />}
       
       {/* Shared view header */}
-      {isSharedView && (
+      {isRouteResolved && isSharedView && (
         <header className="h-12 flex items-center px-10 justify-between bg-transparent z-10">
           <div className="flex items-center gap-3 text-xs font-bold">
             <span className="w-2 h-2 bg-ink-main rounded-full"></span>
@@ -282,7 +362,7 @@ export default function App() {
         )}
 
         {/* Loading State - Shows during PDF processing */}
-        {isLoading && pdfFile && !hasError && (
+        {!isSharedView && isLoading && pdfFile && !hasError && (
           <LoadingState
             fileName={pdfFile.name}
             fileSize={pdfFile.size}
@@ -295,7 +375,7 @@ export default function App() {
         )}
 
         {/* Stage - Only render when PDF is loaded */}
-        {!isLoading && !hasError && pdfFile && (
+        {(!isLoading || isSharedView) && !hasError && pdfFile && (
           <Stage
             pdfFile={pdfFile}
             config={config}
@@ -309,7 +389,7 @@ export default function App() {
         )}
 
         {/* Hidden Stage for PDF processing (loads PDF in background) */}
-        {isLoading && pdfFile && (
+        {!isSharedView && isLoading && pdfFile && (
           <div className="hidden">
             <Stage
               pdfFile={pdfFile}
@@ -324,8 +404,40 @@ export default function App() {
           </div>
         )}
 
+        {/* Shared loading state to prevent blank/flash transitions while PDF metadata/pages initialize */}
+        {showSharedLoader && (
+          <section className="absolute inset-0 z-30 flex items-center justify-center px-6 pointer-events-none">
+            <div className="w-full max-w-[560px] border border-panel-border bg-[#F0F0F0]/95 backdrop-blur-sm p-6">
+              <div className="flex justify-between items-center pb-2 border-b border-ink-light">
+                <span className="text-[10px] font-bold text-ink-dim tracking-widest">READ_MODE_BOOT</span>
+                <span className="text-[10px] font-bold text-ink-main tracking-widest">LOADING</span>
+              </div>
+              <p className="text-xs text-ink-main mt-4">Preparing shared flipbook…</p>
+            </div>
+          </section>
+        )}
+
+        {/* Shared error state */}
+        {isSharedView && sharedLoadState === 'error' && (
+          <section className="absolute inset-0 z-30 flex items-center justify-center px-6">
+            <div className="w-full max-w-[560px] border border-red-300 bg-white p-6">
+              <div className="flex justify-between items-center pb-2 border-b border-ink-light">
+                <span className="text-[10px] font-bold text-ink-dim tracking-widest">READ_MODE_BOOT</span>
+                <span className="text-[10px] font-bold text-red-600 tracking-widest">FAILED</span>
+              </div>
+              <p className="text-sm text-ink-main mt-4">{sharedLoadError || 'Unable to load shared flipbook.'}</p>
+              <a
+                href="/"
+                className="inline-block mt-4 text-[10px] font-bold border-b border-ink-main pb-0.5 hover:opacity-70 transition-opacity"
+              >
+                RETURN_HOME
+              </a>
+            </div>
+          </section>
+        )}
+
         {/* Landing Page - Shows when no file uploaded (hidden in shared view) */}
-        {!isSharedView && !pdfFile && !isLoading && !hasError && (
+        {isRouteResolved && !isSharedView && !pdfFile && !isLoading && !hasError && (
           <LandingPage onUpload={handleUpload} />
         )}
 

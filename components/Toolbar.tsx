@@ -17,6 +17,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   const [hasCopied, setHasCopied] = React.useState(false);
   const [deployUrl, setDeployUrl] = React.useState('https://flipsys-0-1.vercel.app?share=...');
   const [flipSpeedValue, setFlipSpeedValue] = React.useState(config.flipSpeed);
+  const isShareUrlReady = !deployUrl.includes('share=...');
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -38,7 +39,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
       const result = await uploadPDF(pdfFile, config);
       
       if (result) {
-        const shareUrl = `${window.location.origin}?share=${result.id}`;
+        const shareUrl = `${window.location.origin}${window.location.pathname}?share=${result.id}`;
         setDeployUrl(shareUrl);
         navigator.clipboard.writeText(shareUrl);
         setHasCopied(true);
@@ -160,6 +161,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
           className="h-[60px] bg-white border border-dashed border-ink-dim flex items-center justify-between gap-3 px-4 cursor-pointer hover:bg-gray-50 transition-colors group relative overflow-hidden"
           style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)' }}
           onClick={() => {
+            if (!isShareUrlReady) return;
             navigator.clipboard.writeText(deployUrl);
             setHasCopied(true);
             setTimeout(() => setHasCopied(false), 2000);
@@ -171,18 +173,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
             readOnly
             className="flex-1 text-[10px] text-ink-dim font-mono outline-none bg-transparent cursor-pointer"
           />
-          <svg 
-            className="w-4 h-4 text-ink-main group-hover:scale-110 transition-transform duration-300 shrink-0" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            {hasCopied ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            )}
-          </svg>
+          {isShareUrlReady && (
+            <svg 
+              className="w-4 h-4 text-ink-main group-hover:scale-110 transition-transform duration-300 shrink-0" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              {hasCopied ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              )}
+            </svg>
+          )}
         </div>
 
         <button

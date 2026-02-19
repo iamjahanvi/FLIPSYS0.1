@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Document, Page } from 'react-pdf';
 import HTMLFlipBook from 'react-pageflip';
 import { Config } from '../types';
@@ -56,12 +56,97 @@ export const Stage: React.FC<StageProps> = ({
   isSharedView = false
 }) => {
   const bookRef = useRef<any>(null);
-  const [scale, setScale] = useState(1);
+  const [renderDimensions, setRenderDimensions] = useState<{ width: number; height: number } | null>(null);
   const [isFlipping, setIsFlipping] = useState(false);
   const [bookDimensions, setBookDimensions] = useState<{ width: number; height: number } | null>(null);
-  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [canAnimatePosition, setCanAnimatePosition] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const isManualFlipRef = useRef(false);
+  const effectiveFlippingTime = Math.round(config.flipSpeed * 1.35);
+
+  const patchHoverCornerSensitivity = useCallback(() => {
+    const pageFlipInstance = bookRef.current?.pageFlip?.();
+    const flipController = pageFlipInstance?.getFlipController?.() as any;
+
+    if (!flipController) return;
+
+    if (!flipController.__strictHoverCornersPatched) {
+      const originalIsPointOnCorners = flipController.isPointOnCorners?.bind(flipController);
+      if (typeof originalIsPointOnCorners === 'function') {
+        // Default library threshold is diagonal/5 and is too broad for realistic hover-corner behavior.
+        // Tighten it to diagonal/9 so hover fold starts much closer to the actual corners.
+        flipController.isPointOnCorners = function(this: any, globalPos: { x: number; y: number }) {
+          if (!originalIsPointOnCorners(globalPos)) return false;
+
+          const rect = this.getBoundsRect?.();
+          const bookPos = this.render?.convertToBook?.(globalPos);
+          if (!rect || !bookPos) return false;
+
+          const strictDistance = Math.sqrt(rect.pageWidth * rect.pageWidth + rect.height * rect.height) / 9;
+
+          return (
+            bookPos.x > 0 &&
+            bookPos.y > 0 &&
+            bookPos.x < rect.width &&
+            bookPos.y < rect.height &&
+            (bookPos.x < strictDistance || bookPos.x > rect.width - strictDistance) &&
+            (bookPos.y < strictDistance || bookPos.y > rect.height - strictDistance)
+          );
+        };
+
+        flipController.__strictHoverCornersPatched = true;
+      }
+    }
+
+    if (!flipController.__hoverEaseOutPatched) {
+      const originalAnimateFlippingTo = flipController.animateFlippingTo?.bind(flipController);
+      if (typeof originalAnimateFlippingTo === 'function') {
+        flipController.animateFlippingTo = function(
+          this: any,
+          start: { x: number; y: number },
+          dest: { x: number; y: number },
+          isTurned: boolean,
+          needReset = true
+        ) {
+          const isHoverCornerPreview = !isTurned && needReset === false;
+
+          if (!isHoverCornerPreview) {
+            return originalAnimateFlippingTo(start, dest, isTurned, needReset);
+          }
+
+          if (!this.render?.startAnimation || typeof this.do !== 'function') {
+            return originalAnimateFlippingTo(start, dest, isTurned, needReset);
+          }
+
+          const deltaX = dest.x - start.x;
+          const deltaY = dest.y - start.y;
+          const steps = Math.max(16, Math.ceil(Math.max(Math.abs(deltaX), Math.abs(deltaY))));
+          const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+
+          const frames: Array<() => void> = [];
+          for (let i = 0; i <= steps; i += 1) {
+            const t = i / steps;
+            const easedT = easeOut(t);
+            const point = {
+              x: start.x + deltaX * easedT,
+              y: start.y + deltaY * easedT,
+            };
+            frames.push(() => this.do(point));
+          }
+
+          const baseDuration =
+            typeof this.getAnimationDuration === 'function'
+              ? this.getAnimationDuration(steps)
+              : this.app?.getSettings?.()?.flippingTime ?? 500;
+
+          this.render.startAnimation(frames, Math.round(baseDuration * 1.7), () => {
+            // For hover corner preview, original callback would no-op (isTurned=false, needReset=false).
+          });
+        };
+
+        flipController.__hoverEaseOutPatched = true;
+      }
+    }
+  }, []);
 
   // Initialize audio on mount
   useEffect(() => {
@@ -82,7 +167,8 @@ export const Stage: React.FC<StageProps> = ({
   // Reset dimensions and error when file changes
   useEffect(() => {
     setBookDimensions(null);
-    setPdfError(null);
+    setRenderDimensions(null);
+    setCanAnimatePosition(false);
   }, [pdfFile]);
 
   const onDocumentLoad = async (pdf: any) => {
@@ -107,7 +193,7 @@ export const Stage: React.FC<StageProps> = ({
     }
   };
 
-  // Responsive scaling logic that adapts to the dynamic book dimensions
+  // Compute actual rendered page size (instead of CSS transform scaling) to keep pointer physics aligned.
   useEffect(() => {
     if (!bookDimensions) return;
 
@@ -115,37 +201,52 @@ export const Stage: React.FC<StageProps> = ({
       const stageWidth = window.innerWidth;
       const stageHeight = window.innerHeight;
 
-      // Ideal full width (2 pages) + padding
-      const fullBookWidth = bookDimensions.width * 2;
-      const fullBookHeight = bookDimensions.height;
-
       const horizontalPadding = 40;
-      const verticalPadding = pdfFile ? 320 : 120; // Header + Toolbar + Margins
+      const verticalPadding = isSharedView ? 120 : 320;
 
       const availableWidth = stageWidth - horizontalPadding;
       const availableHeight = stageHeight - verticalPadding;
 
-      const scaleX = availableWidth / fullBookWidth;
-      const scaleY = availableHeight / fullBookHeight;
+      const spreadWidth = bookDimensions.width * 2;
+      const spreadHeight = bookDimensions.height;
+      const scaleX = availableWidth / spreadWidth;
+      const scaleY = availableHeight / spreadHeight;
 
-      // Fit within both width and height, but limit max scale
-      let newScale = Math.min(scaleX, scaleY);
+      let nextScale = Math.min(scaleX, scaleY);
+      if (nextScale > 1.2) nextScale = 1.2;
+      if (nextScale < 0.2) nextScale = 0.2;
 
-      // Cap max scale to avoid pixelation if image is small, 
-      // but allow it to scale down as much as needed for mobile
-      if (newScale > 1.2) newScale = 1.2;
-
-      // Set a hard minimum to prevent it disappearing
-      if (newScale < 0.2) newScale = 0.2;
-
-      setScale(newScale);
+      setRenderDimensions({
+        width: Math.max(120, Math.round(bookDimensions.width * nextScale)),
+        height: Math.max(160, Math.round(bookDimensions.height * nextScale)),
+      });
     };
 
     window.addEventListener('resize', handleResize);
     handleResize(); // Initial call
 
     return () => window.removeEventListener('resize', handleResize);
-  }, [bookDimensions]);
+  }, [bookDimensions, isSharedView]);
+
+  useEffect(() => {
+    if (!totalPages || !renderDimensions) return;
+
+    const patchTimer = window.setTimeout(() => {
+      patchHoverCornerSensitivity();
+    }, 0);
+
+    return () => window.clearTimeout(patchTimer);
+  }, [totalPages, renderDimensions, patchHoverCornerSensitivity]);
+
+  useEffect(() => {
+    if (!renderDimensions || totalPages === 0) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      setCanAnimatePosition(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [renderDimensions, totalPages]);
 
   const playFlipSound = () => {
     if (config.useSound && audioRef.current) {
@@ -165,7 +266,6 @@ export const Stage: React.FC<StageProps> = ({
   const goToPrev = () => {
     if (bookRef.current && !isFlipping) {
       setIsFlipping(true);
-      isManualFlipRef.current = true;
       playFlipSound();
       bookRef.current.pageFlip().flipPrev();
     }
@@ -174,7 +274,6 @@ export const Stage: React.FC<StageProps> = ({
   const goToNext = () => {
     if (bookRef.current && !isFlipping) {
       setIsFlipping(true);
-      isManualFlipRef.current = true;
       playFlipSound();
       bookRef.current.pageFlip().flipNext();
     }
@@ -211,12 +310,12 @@ export const Stage: React.FC<StageProps> = ({
         }
       `}</style>
 
-      {/* Container scaling wrapper */}
-      <div 
+      {/* Book wrapper */}
+      <div
         className="relative"
-        style={{ 
-          transform: `scale(${scale}) ${bookDimensions ? (currentPage === 0 ? `translateX(-${bookDimensions.width / 2}px)` : (currentPage === totalPages - 1) ? `translateX(${bookDimensions.width / 2}px)` : 'translateX(0px)') : 'translateX(0px)'}`, 
-          transition: 'transform 0.5s ease-out',
+        style={{
+          transform: `translateX(${renderDimensions && totalPages > 0 ? (currentPage === 0 ? -renderDimensions.width / 2 : (currentPage === totalPages - 1) ? renderDimensions.width / 2 : 0) : 0}px)`,
+          transition: canAnimatePosition ? 'transform 0.5s ease-out' : 'none',
         }}
       >
         <div 
@@ -234,7 +333,6 @@ export const Stage: React.FC<StageProps> = ({
             console.error('PDF Load Error:', error);
             const errorMsg = error.message || 'Failed to load PDF';
             console.log('Setting pdfError and calling onError:', errorMsg);
-            setPdfError(errorMsg);
             if (onError) {
               console.log('Calling onError callback');
               onError(errorMsg);
@@ -247,51 +345,52 @@ export const Stage: React.FC<StageProps> = ({
             <div className="hidden" />
           }
         >
-          {/* Only render FlipBook when we have pages AND dimensions to prevent init errors */}
-          {totalPages > 0 && bookDimensions && (
-            <div 
-              className="flipbook-click-area"
-              onMouseDown={() => {
-                // Play sound on mouse down (before flip starts) when sound is enabled
-                if (config.useSound) {
-                  playFlipSound();
-                }
-              }}
-            >
+          {/* Only render FlipBook when we have pages and resolved render dimensions */}
+          {totalPages > 0 && renderDimensions && (
+            <div className="flipbook-click-area">
               <HTMLFlipBook
                   key={`flipbook-${config.flipSpeed}`}
-                  width={bookDimensions.width}
-                  height={bookDimensions.height}
+                  width={renderDimensions.width}
+                  height={renderDimensions.height}
                   size="fixed"
                   minWidth={100}
                   maxWidth={2000}
                   minHeight={100}
                   maxHeight={2000}
-                  maxShadowOpacity={0.5}
                   showCover={config.isHardCover}
                   mobileScrollSupport={true}
                   className="flipbook-container"
-                  flippingTime={config.flipSpeed}
+                  flippingTime={effectiveFlippingTime}
                   usePortrait={false}
                   startZIndex={0}
                   autoSize={true}
-                  clickEventForward={true}
+                  clickEventForward={false}
                   useMouseEvents={true}
-                  swipeDistance={30}
+                  swipeDistance={24}
                   showPageCorners={true}
-                  disableFlipByClick={false}
+                  disableFlipByClick={true}
                   onFlip={(e) => {
+                    if (!isFlipping) {
+                      playFlipSound();
+                    }
+                    setIsFlipping(true);
                     onPageChange(e.data);
-                    setTimeout(() => setIsFlipping(false), config.flipSpeed);
+                    setTimeout(() => setIsFlipping(false), effectiveFlippingTime);
                   } }
                   ref={bookRef}
                   startPage={currentPage}
-                  drawShadow={true} style={undefined}>
+                  drawShadow={true}
+                  maxShadowOpacity={0.25}
+                  style={undefined}
+                  onInit={() => {
+                    patchHoverCornerSensitivity();
+                  }}
+              >
                 {Array.from(new Array(totalPages), (el, index) => (
                   <PDFPage
                     key={`page_${index + 1}`}
                     pageNumber={index + 1}
-                    width={bookDimensions.width}
+                    width={renderDimensions.width}
                   />
                 ))}
               </HTMLFlipBook>
