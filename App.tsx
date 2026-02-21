@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
-import { Toolbar } from './components/Toolbar';
+import { Toolbar, SectionType } from './components/Toolbar';
 import { Stage } from './components/Stage';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
@@ -50,6 +50,7 @@ export default function App() {
     shareId ? 'fetching' : 'idle'
   );
   const [sharedLoadError, setSharedLoadError] = useState<string | null>(null);
+  const [toolbarAccordionSection, setToolbarAccordionSection] = useState<SectionType>('source');
 
   // Background pattern style from the design
   const backgroundStyle: React.CSSProperties = {
@@ -325,7 +326,7 @@ export default function App() {
     (!pdfFile || totalPages === 0);
 
   return (
-    <div className={`h-screen w-screen flex flex-col font-mono text-ink-main overflow-x-hidden overflow-y-hidden select-none ${isSharedView ? 'bg-[#E6E6E6]' : ''}`} style={isSharedView ? undefined : backgroundStyle}>
+    <div className={`h-[100dvh] w-screen flex flex-col font-mono text-ink-main overflow-x-hidden overflow-y-hidden select-none ${isSharedView ? 'bg-[#E6E6E6]' : ''}`} style={isSharedView ? undefined : backgroundStyle}>
       {/* Header - simplified for shared view */}
       {isRouteResolved && !isSharedView && <Header isReady={isReady} isLoading={isLoading} hasError={hasError} />}
       
@@ -386,6 +387,7 @@ export default function App() {
             totalPages={totalPages}
             onError={handleError}
             isSharedView={isSharedView}
+            toolbarAccordionSection={toolbarAccordionSection}
           />
         )}
 
@@ -452,6 +454,7 @@ export default function App() {
               pdfName={pdfFile?.name}
               pdfSize={pdfFile?.size}
               pdfFile={pdfFile}
+              onAccordionChange={setToolbarAccordionSection}
             />
           </div>
         )}

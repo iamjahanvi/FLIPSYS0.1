@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Config, formatBytes } from '../types';
 import { uploadPDF } from '../lib/supabase';
 
@@ -9,21 +9,30 @@ interface ToolbarProps {
   pdfName?: string;
   pdfSize?: number;
   pdfFile?: File | null;
+  onAccordionChange?: (openSection: SectionType) => void;
 }
 
-type SectionType = 'source' | 'physics' | 'share' | null;
+export type SectionType = 'source' | 'physics' | 'share' | null;
 
-export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, pdfName, pdfSize, pdfFile }) => {
+export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, pdfName, pdfSize, pdfFile, onAccordionChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [hasCopied, setHasCopied] = React.useState(false);
   const [deployUrl, setDeployUrl] = React.useState('https://flipsys-0-1.vercel.app?share=...');
   const [flipSpeedValue, setFlipSpeedValue] = React.useState(config.flipSpeed);
-  const [openSection, setOpenSection] = useState<SectionType>('source');
+  const [openSection, setOpenSection] = useState<SectionType>(null);
   const isShareUrlReady = !deployUrl.includes('share=...');
 
+  // Reset all accordions when a new file is uploaded/replaced
+  useEffect(() => {
+    setOpenSection(null);
+    onAccordionChange?.(null);
+  }, [pdfFile?.name]);
+
   const toggleSection = (section: SectionType) => {
-    setOpenSection(openSection === section ? null : section);
+    const newSection = openSection === section ? null : section;
+    setOpenSection(newSection);
+    onAccordionChange?.(newSection);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,6 +45,24 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
 
   const triggerUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  // Play click sound when toggle is turned ON
+  const playClickSound = () => {
+    const audio = new Audio('/click.wav');
+    audio.volume = 0.5;
+    audio.play().catch(() => {
+      // Ignore autoplay errors
+    });
+  };
+
+  const handleSoundToggle = () => {
+    const newValue = !config.useSound;
+    // Play sound only when turning ON
+    if (newValue) {
+      playClickSound();
+    }
+    setConfig({ ...config, useSound: newValue });
   };
 
   const handleGenerate = async () => {
@@ -62,7 +89,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   };
 
   return (
-    <section className="bg-[#F0F0F0]/95 border-t border-panel-border backdrop-blur-md shrink-0 z-40 md:h-48 md:px-6 md:py-4">
+    <section className="bg-[#F0F0F0]/95 border-t border-panel-border backdrop-blur-md shrink-0 z-40 md:h-48 md:px-6 md:py-4 pb-[env(safe-area-inset-bottom,0px)]">
       
       {/* Desktop: Horizontal layout */}
       <div className="hidden md:flex h-full gap-6">
@@ -70,7 +97,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
         <div className="flex-1 min-w-[200px] flex flex-col gap-3 border-r border-panel-border pr-6">
           <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
             <span className="text-[10px] font-bold text-ink-dim tracking-widest">01 SOURCE</span>
-            <span className="text-[8px] font-bold text-ink-dim tracking-widest">PDF_STREAM</span>
           </div>
 
           <input
@@ -152,7 +178,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
             />
           </div>
 
-          <div className="flex items-center justify-between text-[10px] font-bold tracking-widest text-ink-dim cursor-pointer" onClick={() => setConfig({ ...config, useSound: !config.useSound })}>
+          <div className="flex items-center justify-between text-[10px] font-bold tracking-widest text-ink-dim cursor-pointer" onClick={handleSoundToggle}>
             <span>SOUND_FX</span>
             <div className={`w-6 h-3 border border-ink-main relative transition-all ${config.useSound ? 'bg-ink-main/10' : ''}`}>
               <div className={`absolute top-[1px] w-2 h-2 bg-ink-main transition-all duration-300 ${config.useSound ? 'left-[13px]' : 'left-[1px]'}`}></div>
@@ -220,7 +246,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
           >
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-ink-dim tracking-widest">01 SOURCE</span>
-              <span className="text-[8px] font-bold text-ink-dim tracking-widest">PDF_STREAM</span>
             </div>
             <svg 
               className={`w-4 h-4 text-ink-dim transition-transform duration-300 ${openSection === 'source' ? 'rotate-180' : ''}`}
@@ -294,7 +319,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
           </button>
           
           {openSection === 'physics' && (
-            <div className="px-4 pb-4 pt-2 flex flex-col gap-4">
+            <div className="px-4 pb-4 pt-4 md:pt-2 flex flex-col gap-6 md:gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex justify-between text-[10px] font-bold tracking-widest text-ink-dim">
                   <span>FLIP_SPEED</span>
@@ -328,7 +353,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
                 />
               </div>
 
-              <div className="flex items-center justify-between text-[10px] font-bold tracking-widest text-ink-dim cursor-pointer" onClick={() => setConfig({ ...config, useSound: !config.useSound })}>
+              <div className="flex items-center justify-between text-[10px] font-bold tracking-widest text-ink-dim cursor-pointer" onClick={handleSoundToggle}>
                 <span>SOUND_FX</span>
                 <div className={`w-6 h-3 border border-ink-main relative transition-all ${config.useSound ? 'bg-ink-main/10' : ''}`}>
                   <div className={`absolute top-[1px] w-2 h-2 bg-ink-main transition-all duration-300 ${config.useSound ? 'left-[13px]' : 'left-[1px]'}`}></div>

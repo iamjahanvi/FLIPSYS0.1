@@ -7,10 +7,10 @@ export interface Config {
 }
 
 export const DefaultConfig: Config = {
-  flipSpeed: 1000, // ms
+  flipSpeed: 800, // ms
   isHardCover: true,
   useSound: true,
-  shadowIntensity: 32,
+  shadowIntensity: 50, // 50% shadow
   scale: 1,
 };
 

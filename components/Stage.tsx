@@ -5,6 +5,7 @@ import { Config } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useFlipbookTouch } from '../hooks/useFlipbookTouch';
 import '../flipbook.css';
+import { SectionType } from './Toolbar';
 
 interface StageProps {
   pdfFile: File | null;
@@ -15,6 +16,7 @@ interface StageProps {
   totalPages: number;
   onError?: (errorMessage: string) => void;
   isSharedView?: boolean;
+  toolbarAccordionSection?: SectionType;
 }
 
 // Move PDFPage outside to ensure referential stability
@@ -55,7 +57,8 @@ export const Stage: React.FC<StageProps> = ({
   currentPage,
   totalPages,
   onError,
-  isSharedView = false
+  isSharedView = false,
+  toolbarAccordionSection
 }) => {
   const bookRef = useRef<any>(null);
   const [renderDimensions, setRenderDimensions] = useState<{ width: number; height: number } | null>(null);
@@ -332,10 +335,20 @@ export const Stage: React.FC<StageProps> = ({
     if (!bookRef.current) return;
     if (index < 0 || index >= totalPages) return;
     
-    playFlipSound();
+    // Play sound at the START of the flip (only if enabled)
+    if (config.useSound && audioRef.current) {
+      audioRef.current.currentTime = 0;
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(e => {
+          console.log("Audio play blocked, will retry on next interaction");
+        });
+      }
+    }
+    
     console.log('Navigating to page index:', index);
     bookRef.current.pageFlip().flip(index);
-  }, [totalPages]);
+  }, [totalPages, config.useSound]);
 
   const handlePrev = useCallback(() => {
     if (currentPage <= 0) return;
@@ -416,6 +429,24 @@ export const Stage: React.FC<StageProps> = ({
   // Ref for the stage container
   const stageRef = useRef<HTMLElement>(null);
 
+  // Calculate dynamic bottom padding based on accordion state (mobile only)
+  const getMobileBottomPadding = () => {
+    if (isSharedView) return 'pb-4';
+    // Base padding when accordion is closed (just headers)
+    if (!toolbarAccordionSection) return 'pb-[180px]';
+    // Expanded padding based on which section is open
+    switch (toolbarAccordionSection) {
+      case 'source':
+        return 'pb-[320px]';
+      case 'physics':
+        return 'pb-[300px]';
+      case 'share':
+        return 'pb-[280px]';
+      default:
+        return 'pb-[180px]';
+    }
+  };
+
   if (!pdfFile) {
     // LandingPage handles upload UI - Stage just renders empty when no PDF
     return (
@@ -426,7 +457,7 @@ export const Stage: React.FC<StageProps> = ({
   return (
     <section 
       ref={stageRef}
-      className={`flipbook-stage flex-1 relative flex flex-col items-center justify-center ${isSharedView ? 'p-4 pb-4' : 'p-4 pb-[240px] md:pb-[210px]'}`}
+      className={`flipbook-stage flex-1 relative flex flex-col items-center justify-center ${isSharedView ? 'p-4 pb-4' : `pt-16 md:pt-20 ${getMobileBottomPadding()} md:pb-[210px]`}`}
       style={{ overflow: 'visible' }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -552,7 +583,7 @@ export const Stage: React.FC<StageProps> = ({
                   className={`flipbook-container ${isSinglePage ? 'flipbook-single-page' : ''}`}
                   flippingTime={effectiveFlippingTime}
                   usePortrait={isSinglePage}
-                  startZIndex={10}
+                  startZIndex={100}
                   autoSize={true}
                   clickEventForward={false}
                   useMouseEvents={true}
@@ -560,9 +591,6 @@ export const Stage: React.FC<StageProps> = ({
                   showPageCorners={true}
                   disableFlipByClick={true}
                   onFlip={(e) => {
-                    if (!isFlipping) {
-                      playFlipSound();
-                    }
                     setIsFlipping(true);
                     onPageChange(e.data);
                     // Reset isFlipping after animation completes
@@ -592,8 +620,8 @@ export const Stage: React.FC<StageProps> = ({
       </div>
       </div>
 
-      {/* Floating Controls */}
-      <div className={`flipbook-controls absolute ${isSharedView ? 'bottom-10' : 'bottom-[240px] md:bottom-[210px]'} left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border px-4 py-2 flex items-center gap-4 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      {/* Floating Controls - desktop only */}
+      <div className={`hidden md:flex flipbook-controls absolute bottom-[218px] left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border px-4 py-2 items-center gap-4 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <button
           onClick={(e) => {
             e.preventDefault();
