@@ -325,27 +325,28 @@ export default function App() {
     (!pdfFile || totalPages === 0);
 
   return (
-    <div className={`h-screen w-screen flex flex-col font-mono text-ink-main overflow-hidden select-none ${isSharedView ? 'bg-[#E6E6E6]' : ''}`} style={isSharedView ? undefined : backgroundStyle}>
+    <div className={`h-screen w-screen flex flex-col font-mono text-ink-main overflow-x-hidden overflow-y-hidden select-none ${isSharedView ? 'bg-[#E6E6E6]' : ''}`} style={isSharedView ? undefined : backgroundStyle}>
       {/* Header - simplified for shared view */}
       {isRouteResolved && !isSharedView && <Header isReady={isReady} isLoading={isLoading} hasError={hasError} />}
       
       {/* Shared view header */}
       {isRouteResolved && isSharedView && (
-        <header className="h-12 flex items-center px-10 justify-between bg-transparent z-10">
-          <div className="flex items-center gap-3 text-xs font-bold">
+        <header className="h-12 flex items-center px-4 sm:px-10 justify-between bg-transparent z-10 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 text-xs font-bold">
             <span className="w-2 h-2 bg-ink-main rounded-full"></span>
-            PDF2FLIP // SYS.01 // READ_MODE
+            <span className="hidden sm:inline">PDF2FLIP // SYS.01 // READ_MODE</span>
+            <span className="sm:hidden">PDF2FLIP // READ</span>
           </div>
           <a 
             href="/" 
             className="text-[10px] font-bold border-b border-ink-main pb-0.5 hover:opacity-70 transition-opacity"
           >
-            EXIT [ESC]
+            EXIT
           </a>
         </header>
       )}
 
-      <main className={`flex-1 flex flex-col min-h-0 relative ${isSharedView ? 'pb-0' : ''}`}>
+      <main className={`${pdfFile || isLoading || hasError ? 'flex-1' : ''} flex flex-col min-h-0 relative overflow-hidden ${isSharedView ? 'pb-0' : ''}`}>
         {/* Error State - Shows when processing fails */}
         {hasError && errorInfo && (
           <ErrorState
@@ -406,8 +407,8 @@ export default function App() {
 
         {/* Shared loading state to prevent blank/flash transitions while PDF metadata/pages initialize */}
         {showSharedLoader && (
-          <section className="absolute inset-0 z-30 flex items-center justify-center px-6 pointer-events-none">
-            <div className="w-full max-w-[560px] border border-panel-border bg-[#F0F0F0]/95 backdrop-blur-sm p-6">
+          <section className="absolute inset-0 z-30 flex items-center justify-center px-4 sm:px-6 pointer-events-none">
+            <div className="w-full max-w-[560px] border border-panel-border bg-[#F0F0F0]/95 backdrop-blur-sm p-4 sm:p-6">
               <div className="flex justify-between items-center pb-2 border-b border-ink-light">
                 <span className="text-[10px] font-bold text-ink-dim tracking-widest">READ_MODE_BOOT</span>
                 <span className="text-[10px] font-bold text-ink-main tracking-widest">LOADING</span>
@@ -419,8 +420,8 @@ export default function App() {
 
         {/* Shared error state */}
         {isSharedView && sharedLoadState === 'error' && (
-          <section className="absolute inset-0 z-30 flex items-center justify-center px-6">
-            <div className="w-full max-w-[560px] border border-red-300 bg-white p-6">
+          <section className="absolute inset-0 z-30 flex items-center justify-center px-4 sm:px-6">
+            <div className="w-full max-w-[560px] border border-red-300 bg-white p-4 sm:p-6">
               <div className="flex justify-between items-center pb-2 border-b border-ink-light">
                 <span className="text-[10px] font-bold text-ink-dim tracking-widest">READ_MODE_BOOT</span>
                 <span className="text-[10px] font-bold text-red-600 tracking-widest">FAILED</span>

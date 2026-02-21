@@ -79,11 +79,11 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
     : 0;
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col min-h-0">
       {/* Stage Area - Processing Card */}
-      <section className="flex-1 flex flex-col items-center justify-center p-10">
+      <section className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 md:p-10 overflow-y-auto">
         <div 
-          className="w-[500px] max-w-full bg-white p-8 border border-gray-300 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.15)]"
+          className="w-full max-w-[500px] bg-white p-6 sm:p-8 border border-gray-300 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.15)]"
           style={{
             clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)'
           }}
@@ -105,12 +105,12 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
           </div>
 
           {/* Metrics Row */}
-          <div className="flex justify-between mb-8">
+          <div className="flex flex-col sm:flex-row justify-between mb-8 gap-4 sm:gap-0">
             <div>
               <span className="text-[10px] font-bold text-ink-dim tracking-widest uppercase block mb-1">CURRENT_NODE</span>
               <span className="text-sm font-bold text-ink-main">PAGE_{currentProcessingPage}.RENDER</span>
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <span className="text-[10px] font-bold text-ink-dim tracking-widest uppercase block mb-1">EST_REMAINING</span>
               <span className="text-sm font-bold text-ink-main">{formatTime(estimatedRemaining)}</span>
             </div>
@@ -126,78 +126,155 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
         </div>
       </section>
 
-      {/* Bottom Toolbar - Processing Stats */}
-      <section className={`h-[220px] md:h-48 bg-[#F0F0F0]/95 border-t border-panel-border flex flex-nowrap overflow-x-auto backdrop-blur-md px-6 py-4 gap-6 shrink-0 ${hasInitialized ? 'transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] translate-y-0 opacity-100' : ''}`}>
-        
-        {/* Section 01: Incident Log */}
-        <div className="flex-1 min-w-[200px] flex flex-col gap-3 border-r border-panel-border pr-6">
-          <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
-            <span className="text-[10px] font-bold text-ink-dim tracking-widest">01 INCIDENT_LOG</span>
+      {/* Bottom Toolbar - Processing Stats - Responsive accordion on mobile */}
+      <section className={`bg-[#F0F0F0]/95 border-t border-panel-border backdrop-blur-md shrink-0 overflow-x-hidden md:h-48 ${hasInitialized ? 'transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] translate-y-0 opacity-100' : ''}`}>
+        {/* Desktop: Horizontal layout */}
+        <div className="hidden md:flex h-full px-6 py-4 gap-6">
+          {/* Section 01: Incident Log */}
+          <div className="flex-1 min-w-0 flex flex-col gap-3 border-r border-panel-border pr-6">
+            <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
+              <span className="text-[10px] font-bold text-ink-dim tracking-widest">01 INCIDENT_LOG</span>
+            </div>
+            <div className="text-[9px] text-ink-dim leading-relaxed overflow-hidden flex-1">
+              {incidentLogs.length === 0 && (
+                <div className="border-l-2 border-ink-light pl-2 mb-1">[--:--:--] Initializing...</div>
+              )}
+              {incidentLogs.map((log, index) => {
+                const isError = log.includes('FATAL:') || log.includes('PARSER:');
+                const isLast = index === incidentLogs.length - 1;
+                return (
+                  <div 
+                    key={index} 
+                    className={`border-l-2 pl-2 mb-1 ${isError ? 'border-red-600 text-red-600 bg-red-50' : isLast ? 'border-ink-main text-ink-main font-bold' : 'border-ink-light'}`}
+                  >
+                    {log}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="text-[9px] text-ink-dim leading-relaxed overflow-hidden flex-1">
-            {incidentLogs.length === 0 && (
-              <div className="border-l-2 border-ink-light pl-2 mb-1">[--:--:--] Initializing...</div>
-            )}
-            {incidentLogs.map((log, index) => {
-              const isError = log.includes('FATAL:') || log.includes('PARSER:');
-              const isLast = index === incidentLogs.length - 1;
-              return (
-                <div 
-                  key={index} 
-                  className={`border-l-2 pl-2 mb-1 ${isError ? 'border-red-600 text-red-600 bg-red-50' : isLast ? 'border-ink-main text-ink-main font-bold' : 'border-ink-light'}`}
-                >
-                  {log}
+
+          {/* Section 02: System Resources */}
+          <div className="flex-1 min-w-0 flex flex-col gap-3 border-r border-panel-border pr-6">
+            <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
+              <span className="text-[10px] font-bold text-ink-dim tracking-widest">02 SYS_RESOURCES</span>
+            </div>
+            <div className="flex flex-col gap-4 mt-2">
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="text-ink-dim">CPU_USAGE</span>
+                  <span className="text-ink-main font-bold">{cpuUsage}%</span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Section 02: System Resources */}
-        <div className="flex-1 min-w-[200px] flex flex-col gap-3 border-r border-panel-border pr-6">
-          <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
-            <span className="text-[10px] font-bold text-ink-dim tracking-widest">02 SYS_RESOURCES</span>
-          </div>
-          <div className="flex flex-col gap-4 mt-2">
-            <div>
-              <div className="flex justify-between text-[11px] mb-1">
-                <span className="text-ink-dim">CPU_USAGE</span>
-                <span className="text-ink-main font-bold">{cpuUsage}%</span>
+                <div className="h-1.5 bg-gray-300 w-full">
+                  <div className="h-full bg-ink-dim transition-all duration-500" style={{ width: `${cpuUsage}%` }}></div>
+                </div>
               </div>
-              <div className="h-1.5 bg-gray-300 w-full">
-                <div className="h-full bg-ink-dim transition-all duration-500" style={{ width: `${cpuUsage}%` }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-[11px] mb-1">
-                <span className="text-ink-dim">VRAM_ALLOC</span>
-                <span className="text-ink-main font-bold">1.2GB / 4.0GB</span>
-              </div>
-              <div className="h-1.5 bg-gray-300 w-full">
-                <div className="h-full bg-ink-dim transition-all duration-500" style={{ width: `${vramUsage}%` }}></div>
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="text-ink-dim">VRAM_ALLOC</span>
+                  <span className="text-ink-main font-bold">1.2GB / 4.0GB</span>
+                </div>
+                <div className="h-1.5 bg-gray-300 w-full">
+                  <div className="h-full bg-ink-dim transition-all duration-500" style={{ width: `${vramUsage}%` }}></div>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Section 03: OPS Health - File Size */}
+          <div className="flex-1 min-w-0 flex flex-col gap-3">
+            <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
+              <span className="text-[10px] font-bold text-ink-dim tracking-widest">03 OPS_HEALTH</span>
+              <span className={`text-[10px] font-bold tracking-widest ${processingStatus === 'ACTIVE' ? 'text-green-600' : processingStatus === 'SYNCING' ? 'text-amber-600' : 'text-ink-dim'}`}>
+                {processingStatus}
+              </span>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center border border-gray-200 bg-white">
+              <span className="text-[10px] font-bold text-ink-dim tracking-widest uppercase mb-2">
+                File Size
+              </span>
+              <span className="text-4xl font-bold text-ink-main">
+                {formatFileSize(fileSize)}
+              </span>
+              <span className="text-[9px] text-ink-dim mt-1">
+                PDF DOCUMENT
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Section 03: OPS Health - File Size */}
-        <div className="flex-1 min-w-[200px] flex flex-col gap-3">
-          <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
-            <span className="text-[10px] font-bold text-ink-dim tracking-widest">03 OPS_HEALTH</span>
-            <span className={`text-[10px] font-bold tracking-widest ${processingStatus === 'ACTIVE' ? 'text-green-600' : processingStatus === 'SYNCING' ? 'text-amber-600' : 'text-ink-dim'}`}>
-              {processingStatus}
-            </span>
+        {/* Mobile: Stacked layout */}
+        <div className="md:hidden flex flex-col divide-y divide-panel-border">
+          {/* Section 01: Incident Log */}
+          <div className="p-4">
+            <div className="flex justify-between items-center pb-2 border-b border-ink-light mb-2">
+              <span className="text-[10px] font-bold text-ink-dim tracking-widest">01 INCIDENT_LOG</span>
+            </div>
+            <div className="text-[9px] text-ink-dim leading-relaxed max-h-24 overflow-y-auto">
+              {incidentLogs.length === 0 && (
+                <div className="border-l-2 border-ink-light pl-2 mb-1">[--:--:--] Initializing...</div>
+              )}
+              {incidentLogs.map((log, index) => {
+                const isError = log.includes('FATAL:') || log.includes('PARSER:');
+                const isLast = index === incidentLogs.length - 1;
+                return (
+                  <div 
+                    key={index} 
+                    className={`border-l-2 pl-2 mb-1 ${isError ? 'border-red-600 text-red-600 bg-red-50' : isLast ? 'border-ink-main text-ink-main font-bold' : 'border-ink-light'}`}
+                  >
+                    {log}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="flex-1 flex flex-col items-center justify-center border border-gray-200 bg-white">
-            <span className="text-[10px] font-bold text-ink-dim tracking-widest uppercase mb-2">
-              File Size
-            </span>
-            <span className="text-4xl font-bold text-ink-main">
-              {formatFileSize(fileSize)}
-            </span>
-            <span className="text-[9px] text-ink-dim mt-1">
-              PDF DOCUMENT
-            </span>
+
+          {/* Section 02: System Resources */}
+          <div className="p-4">
+            <div className="flex justify-between items-center pb-2 border-b border-ink-light mb-3">
+              <span className="text-[10px] font-bold text-ink-dim tracking-widest">02 SYS_RESOURCES</span>
+            </div>
+            <div className="flex flex-col gap-3">
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="text-ink-dim">CPU_USAGE</span>
+                  <span className="text-ink-main font-bold">{cpuUsage}%</span>
+                </div>
+                <div className="h-1.5 bg-gray-300 w-full">
+                  <div className="h-full bg-ink-dim transition-all duration-500" style={{ width: `${cpuUsage}%` }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="text-ink-dim">VRAM_ALLOC</span>
+                  <span className="text-ink-main font-bold">1.2GB / 4.0GB</span>
+                </div>
+                <div className="h-1.5 bg-gray-300 w-full">
+                  <div className="h-full bg-ink-dim transition-all duration-500" style={{ width: `${vramUsage}%` }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 03: OPS Health - File Size */}
+          <div className="p-4">
+            <div className="flex justify-between items-center pb-2 border-b border-ink-light mb-3">
+              <span className="text-[10px] font-bold text-ink-dim tracking-widest">03 OPS_HEALTH</span>
+              <span className={`text-[10px] font-bold tracking-widest ${processingStatus === 'ACTIVE' ? 'text-green-600' : processingStatus === 'SYNCING' ? 'text-amber-600' : 'text-ink-dim'}`}>
+                {processingStatus}
+              </span>
+            </div>
+            <div className="flex flex-col items-center justify-center border border-gray-200 bg-white py-4">
+              <span className="text-[10px] font-bold text-ink-dim tracking-widest uppercase mb-2">
+                File Size
+              </span>
+              <span className="text-3xl sm:text-4xl font-bold text-ink-main">
+                {formatFileSize(fileSize)}
+              </span>
+              <span className="text-[9px] text-ink-dim mt-1">
+                PDF DOCUMENT
+              </span>
+            </div>
           </div>
         </div>
       </section>

@@ -1,0 +1,332 @@
+/* PDF2FLIP Touch & Responsive Styles */
+
+/* ============================================
+   TOUCH INTERACTION - Disable browser interference
+   ============================================ */
+
+.flipbook-touch-container {
+  touch-action: none;
+  overscroll-behavior: contain;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Disable pull-to-refresh on mobile */
+.flipbook-touch-container {
+  overscroll-behavior-y: contain;
+}
+
+/* ============================================
+   RESPONSIVE LAYOUT MODES
+   ============================================ */
+
+/* Desktop: 2-page spread (>= 1024px) */
+@media (min-width: 1024px) {
+  .flipbook-responsive {
+    --page-count: 2;
+    --spread-mode: true;
+  }
+  
+  .flipbook-responsive .stf__wrapper {
+    width: auto !important;
+  }
+}
+
+/* Tablet: 1-page (600px - 1023px) */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .flipbook-responsive {
+    --page-count: 1;
+    --spread-mode: false;
+  }
+  
+  /* Single page mode - center the book */
+  .flipbook-responsive .stf__wrapper {
+    width: var(--page-width, 100%) !important;
+  }
+  
+  /* Hide the second page in single-page mode */
+  .flipbook-responsive.single-page .stf__page:nth-child(2),
+  .flipbook-responsive.single-page .stf__page:nth-child(2n) {
+    display: none !important;
+  }
+}
+
+/* Mobile: 1-page (< 600px) */
+@media (max-width: 599px) {
+  .flipbook-responsive {
+    --page-count: 1;
+    --spread-mode: false;
+  }
+  
+  /* Single page mode - full width */
+  .flipbook-responsive .stf__wrapper {
+    width: var(--page-width, 100%) !important;
+    max-width: 100vw;
+  }
+  
+  /* Ensure no horizontal scroll */
+  .flipbook-responsive {
+    overflow-x: hidden;
+  }
+  
+  /* Scale pages to fit container */
+  .flipbook-responsive .stf__page {
+    max-width: 100%;
+  }
+  
+  /* Allow overflow for flip animation */
+  .flipbook-responsive {
+    overflow: visible !important;
+  }
+}
+
+/* ============================================
+   SINGLE PAGE MODE OVERRIDES
+   ============================================ */
+
+.flipbook-single-page {
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
+.flipbook-single-page .stf__wrapper {
+  /* Center single page */
+  margin: 0 auto;
+}
+
+/* When in single page mode, adjust the book position */
+.flipbook-single-page .stf__book {
+  transform-origin: center center;
+}
+
+/* ============================================
+   EDGE TAP ZONES (Mobile/Tablet)
+   ============================================ */
+
+.flipbook-edge-zones {
+  position: relative;
+}
+
+.flipbook-edge-zones::before,
+.flipbook-edge-zones::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 18%;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+/* Left edge - Previous page */
+.flipbook-edge-zones::before {
+  left: 0;
+  cursor: w-resize;
+}
+
+/* Right edge - Next page */
+.flipbook-edge-zones::after {
+  right: 0;
+  cursor: e-resize;
+}
+
+/* Hide edge zones on desktop */
+@media (min-width: 1024px) {
+  .flipbook-edge-zones::before,
+  .flipbook-edge-zones::after {
+    display: none;
+  }
+}
+
+/* ============================================
+   TOUCH DRAG STATES
+   ============================================ */
+
+.flipbook-dragging {
+  cursor: grabbing !important;
+}
+
+.flipbook-dragging .stf__page {
+  pointer-events: none;
+}
+
+/* ============================================
+   REACT-PAGEFLIP SPECIFIC FIXES
+   ============================================ */
+
+/* Ensure canvas captures touch events */
+.stf__wrapper canvas {
+  touch-action: none;
+}
+
+/* Fix for mobile scroll support conflicting with our touch handling */
+.stf__wrapper {
+  touch-action: none !important;
+  overflow: visible !important;
+}
+
+/* Prevent clipping of flipping pages - ALL containers */
+.stf__book,
+.stf__page,
+[class*="stf__"] {
+  overflow: visible !important;
+}
+
+/* Ensure the flipbook container doesn't clip */
+.flipbook-container {
+  overflow: visible !important;
+}
+
+/* Fix for single-page mode clipping */
+.flipbook-single-page .stf__wrapper,
+.flipbook-single-page .stf__book,
+.flipbook-single-page [class*="stf__"] {
+  overflow: visible !important;
+}
+
+/* Critical: Allow pages to extend beyond container during flip */
+.flipbook-click-area,
+.flipbook-shadow-wrapper,
+.flipbook-responsive {
+  overflow: visible !important;
+}
+
+/* Ensure the document wrapper doesn't clip */
+.react-pdf__Document {
+  overflow: visible !important;
+}
+
+/* ============================================
+   PAGE VISIBILITY DURING FLIP
+   ============================================ */
+
+/* Ensure pages are visible during flip animation */
+.stf__page {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Fix for flipping page content visibility */
+.stf__page--flipping,
+.stf__page[data-flipping="true"],
+[class*="stf__page"][style*="z-index"] {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Ensure PDF content is visible during flip */
+.react-pdf__Page {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.react-pdf__Page canvas,
+.react-pdf__Page__canvas {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Fix z-index for flipping pages */
+.stf__wrapper .stf__page {
+  z-index: auto;
+}
+
+/* Ensure the active flipping page is on top */
+.stf__wrapper .stf__page[style*="z-index: 1"],
+.stf__wrapper .stf__page[style*="z-index: 2"] {
+  z-index: 100 !important;
+}
+
+/* ============================================
+   PAGE TRANSITION ANIMATIONS
+   ============================================ */
+
+/* Smooth transitions for layout changes */
+.flipbook-responsive .stf__wrapper,
+.flipbook-responsive .stf__book,
+.flipbook-responsive .stf__page {
+  transition: transform 0.3s ease-out, width 0.3s ease-out;
+}
+
+/* Disable transitions during drag for performance */
+.flipbook-dragging .stf__wrapper,
+.flipbook-dragging .stf__book,
+.flipbook-dragging .stf__page {
+  transition: none !important;
+}
+
+/* ============================================
+   ORIENTATION CHANGE HANDLING
+   ============================================ */
+
+/* Prevent flash during orientation change */
+@media screen and (orientation: landscape) {
+  .flipbook-responsive {
+    transition: none;
+  }
+}
+
+@media screen and (orientation: portrait) {
+  .flipbook-responsive {
+    transition: none;
+  }
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+/* GPU acceleration for page flips */
+.stf__page,
+.stf__wrapper,
+.stf__book {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .flipbook-responsive .stf__wrapper,
+  .flipbook-responsive .stf__book,
+  .flipbook-responsive .stf__page {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ============================================
+   STAGE CONTAINER RESPONSIVE
+   ============================================ */
+
+/* Adjust stage padding for different screen sizes */
+@media (max-width: 1023px) {
+  .flipbook-stage {
+    padding-bottom: 120px !important;
+  }
+}
+
+@media (max-width: 599px) {
+  .flipbook-stage {
+    padding: 0.5rem !important;
+    padding-bottom: 100px !important;
+  }
+}
+
+/* ============================================
+   CONTROLS RESPONSIVE
+   ============================================ */
+
+@media (max-width: 599px) {
+  .flipbook-controls {
+    bottom: 80px !important;
+    padding: 0.5rem 1rem !important;
+  }
+  
+  .flipbook-controls button {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}

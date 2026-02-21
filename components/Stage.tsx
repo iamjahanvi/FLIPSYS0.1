@@ -3,6 +3,8 @@ import { Document, Page } from 'react-pdf';
 import HTMLFlipBook from 'react-pageflip';
 import { Config } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useFlipbookTouch } from '../hooks/useFlipbookTouch';
+import '../flipbook.css';
 
 interface StageProps {
   pdfFile: File | null;
@@ -58,16 +60,67 @@ export const Stage: React.FC<StageProps> = ({
   const bookRef = useRef<any>(null);
   const [renderDimensions, setRenderDimensions] = useState<{ width: number; height: number } | null>(null);
   const [isFlipping, setIsFlipping] = useState(false);
+  const isFlippingRef = useRef(isFlipping);
+  useEffect(() => { isFlippingRef.current = isFlipping; }, [isFlipping]);
+  
   const [bookDimensions, setBookDimensions] = useState<{ width: number; height: number } | null>(null);
   const [canAnimatePosition, setCanAnimatePosition] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const effectiveFlippingTime = Math.round(config.flipSpeed * 1.35);
+  
+  // Responsive state
+  const [isSinglePage, setIsSinglePage] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  const patchFlipToPage = useCallback(() => {
+    const pageFlipInstance = bookRef.current?.pageFlip?.();
+    const flipController = pageFlipInstance?.getFlipController?.() as any;
+
+    if (!flipController || flipController.__flipToPagePatched) return;
+
+    // Override flipToPage to fix backward navigation in portrait mode
+    const originalFlipToPage = flipController.flipToPage?.bind(flipController);
+    if (typeof originalFlipToPage === 'function') {
+      flipController.flipToPage = function(this: any, page: number, corner: string) {
+        const current = this.app?.getPageCollection?.()?.getCurrentPageIndex?.() ?? 0;
+        
+        if (page === current) return;
+        
+        // Determine direction based on page index comparison
+        const isGoingBackward = page < current;
+        
+        // Get render rectangle for positioning
+        const rect = this.render?.getRect?.();
+        if (!rect) return;
+        
+        // Use the corner or default to top
+        const flipCorner = corner || 'top';
+        const yPos = flipCorner === 'bottom' ? rect.height - 2 : 1;
+        
+        // For backward navigation, simulate click on left side of page
+        // For forward navigation, simulate click on right side of page
+        // This ensures the physics animation works correctly in both portrait and landscape
+        if (isGoingBackward) {
+          // Click on left edge to flip backward
+          this.flip({ x: rect.left + 5, y: yPos });
+        } else {
+          // Click on right edge to flip forward
+          this.flip({ x: rect.left + rect.pageWidth * 2 - 5, y: yPos });
+        }
+      };
+      
+      flipController.__flipToPagePatched = true;
+    }
+  }, []);
 
   const patchHoverCornerSensitivity = useCallback(() => {
     const pageFlipInstance = bookRef.current?.pageFlip?.();
     const flipController = pageFlipInstance?.getFlipController?.() as any;
 
     if (!flipController) return;
+
+    // Apply flipToPage patch first
+    patchFlipToPage();
 
     if (!flipController.__strictHoverCornersPatched) {
       const originalIsPointOnCorners = flipController.isPointOnCorners?.bind(flipController);
@@ -200,14 +253,25 @@ export const Stage: React.FC<StageProps> = ({
     const handleResize = () => {
       const stageWidth = window.innerWidth;
       const stageHeight = window.innerHeight;
+      setWindowWidth(stageWidth);
 
-      const horizontalPadding = 40;
-      const verticalPadding = isSharedView ? 120 : 320;
+      // Determine layout mode based on breakpoints
+      // Desktop: >= 1024px → 2-page spread
+      // Tablet: 600px - 1023px → 1 page
+      // Mobile: < 600px → 1 page
+      const newIsSinglePage = stageWidth < 1024;
+      setIsSinglePage(newIsSinglePage);
+
+      const horizontalPadding = stageWidth < 600 ? 16 : 40;
+      const verticalPadding = isSharedView 
+        ? (stageWidth < 600 ? 80 : 120) 
+        : (stageWidth < 600 ? 180 : 320);
 
       const availableWidth = stageWidth - horizontalPadding;
       const availableHeight = stageHeight - verticalPadding;
 
-      const spreadWidth = bookDimensions.width * 2;
+      // In single-page mode, only use one page width
+      const spreadWidth = newIsSinglePage ? bookDimensions.width : bookDimensions.width * 2;
       const spreadHeight = bookDimensions.height;
       const scaleX = availableWidth / spreadWidth;
       const scaleY = availableHeight / spreadHeight;
@@ -263,21 +327,94 @@ export const Stage: React.FC<StageProps> = ({
     }
   };
 
-  const goToPrev = () => {
-    if (bookRef.current && !isFlipping) {
-      setIsFlipping(true);
-      playFlipSound();
-      bookRef.current.pageFlip().flipPrev();
-    }
-  };
+  // Index-based navigation - works identically in both spread and portrait modes
+  const goToPage = useCallback((index: number) => {
+    if (!bookRef.current) return;
+    if (index < 0 || index >= totalPages) return;
+    
+    playFlipSound();
+    console.log('Navigating to page index:', index);
+    bookRef.current.pageFlip().flip(index);
+  }, [totalPages]);
 
-  const goToNext = () => {
-    if (bookRef.current && !isFlipping) {
-      setIsFlipping(true);
-      playFlipSound();
-      bookRef.current.pageFlip().flipNext();
+  const handlePrev = useCallback(() => {
+    if (currentPage <= 0) return;
+    goToPage(currentPage - 1);
+  }, [currentPage, goToPage]);
+
+  const handleNext = useCallback(() => {
+    if (currentPage >= totalPages - 1) return;
+    goToPage(currentPage + 1);
+  }, [currentPage, totalPages, goToPage]);
+
+  // Detect if device supports touch
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  useEffect(() => {
+    const checkTouch = () => {
+      setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    };
+    checkTouch();
+    window.addEventListener('touchstart', checkTouch, { once: true });
+    return () => window.removeEventListener('touchstart', checkTouch);
+  }, []);
+
+  // Touch swipe detection with 25% threshold
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (!isTouchDevice) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, [isTouchDevice]);
+  
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!isTouchDevice || touchStartX.current === null) return;
+    
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const deltaX = endX - touchStartX.current;
+    const deltaY = endY - touchStartY.current;
+    
+    // Only handle horizontal swipes (ignore vertical scrolling)
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      const screenWidth = window.innerWidth;
+      const swipePercent = Math.abs(deltaX) / screenWidth;
+      
+      // 25% threshold for complete flip
+      if (swipePercent >= 0.25) {
+        if (deltaX > 0) {
+          // Swipe right = previous page
+          handlePrev();
+        } else {
+          // Swipe left = next page
+          handleNext();
+        }
+      }
     }
-  };
+    
+    touchStartX.current = null;
+    touchStartY.current = null;
+  }, [isTouchDevice, handlePrev, handleNext]);
+
+  // Touch-only click zones for mobile/tablet
+  const handleTouchZoneClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isTouchDevice) return; // Only handle on touch devices
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const width = rect.width;
+    
+    // Left 50% = previous page, Right 50% = next page
+    if (clickX < width / 2) {
+      handlePrev();
+    } else {
+      handleNext();
+    }
+  }, [isTouchDevice, handlePrev, handleNext]);
+
+  // Ref for the stage container
+  const stageRef = useRef<HTMLElement>(null);
 
   if (!pdfFile) {
     // LandingPage handles upload UI - Stage just renders empty when no PDF
@@ -287,7 +424,21 @@ export const Stage: React.FC<StageProps> = ({
   }
 
   return (
-    <section className={`flex-1 relative flex flex-col items-center justify-center overflow-hidden ${isSharedView ? 'p-4 pb-4' : 'p-4 pb-[240px] md:pb-[210px]'}`}>
+    <section 
+      ref={stageRef}
+      className={`flipbook-stage flex-1 relative flex flex-col items-center justify-center ${isSharedView ? 'p-4 pb-4' : 'p-4 pb-[240px] md:pb-[210px]'}`}
+      style={{ overflow: 'visible' }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Responsive layout wrapper */}
+      <div 
+        className={`flipbook-responsive ${isSinglePage ? 'single-page' : ''}`}
+        style={{ 
+          ['--page-width' as string]: renderDimensions ? `${renderDimensions.width}px` : '100%',
+          overflow: 'visible',
+        }}
+      >
       {/* Shadows visible during flip - controlled by react-pageflip */}
       <style>{`
         /* Hide hard shadows completely */
@@ -310,12 +461,17 @@ export const Stage: React.FC<StageProps> = ({
         }
       `}</style>
 
-      {/* Book wrapper */}
+      {/* Book wrapper - centered for all pages in single-page mode */}
       <div
         className="relative"
         style={{
-          transform: `translateX(${renderDimensions && totalPages > 0 ? (currentPage === 0 ? -renderDimensions.width / 2 : (currentPage === totalPages - 1) ? renderDimensions.width / 2 : 0) : 0}px)`,
+          // In single-page mode, always center the book
+          // In spread mode, offset for first and last pages to center the visible spread
+          transform: isSinglePage 
+            ? 'none' 
+            : `translateX(${renderDimensions && totalPages > 0 ? (currentPage === 0 ? -renderDimensions.width / 2 : (currentPage === totalPages - 1) ? renderDimensions.width / 2 : 0) : 0}px)`,
           transition: canAnimatePosition ? 'transform 0.5s ease-out' : 'none',
+          overflow: 'visible',
         }}
       >
         <div 
@@ -323,6 +479,7 @@ export const Stage: React.FC<StageProps> = ({
           style={{
             filter: `drop-shadow(0 25px 50px rgba(0, 0, 0, ${config.shadowIntensity / 100 * 0.5}))`,
             transition: 'filter 0.3s ease-out',
+            overflow: 'visible',
           }}
         >
 
@@ -347,9 +504,42 @@ export const Stage: React.FC<StageProps> = ({
         >
           {/* Only render FlipBook when we have pages and resolved render dimensions */}
           {totalPages > 0 && renderDimensions && (
-            <div className="flipbook-click-area">
+            <div 
+              className="flipbook-click-area relative"
+              style={{ 
+                overflow: 'visible',
+                width: isSinglePage ? renderDimensions.width : renderDimensions.width * 2,
+                height: renderDimensions.height,
+              }}
+            >
+              {/* Touch edge zones - only for tap navigation, not blocking drag */}
+              {isTouchDevice && (
+                <div 
+                  className="absolute inset-0 z-20 flex pointer-events-none"
+                  style={{ 
+                    touchAction: 'none',
+                    width: '100%',
+                    height: '100%',
+                  }}
+                >
+                  {/* Left edge tap zone - 20% width */}
+                  <div 
+                    className="h-full pointer-events-auto"
+                    style={{ cursor: 'pointer', width: '20%' }} 
+                    onClick={handlePrev}
+                  />
+                  {/* Middle area - no pointer events, allows drag to pass through */}
+                  <div className="h-full" style={{ width: '60%' }} />
+                  {/* Right edge tap zone - 20% width */}
+                  <div 
+                    className="h-full pointer-events-auto"
+                    style={{ cursor: 'pointer', width: '20%' }} 
+                    onClick={handleNext}
+                  />
+                </div>
+              )}
               <HTMLFlipBook
-                  key={`flipbook-${config.flipSpeed}`}
+                  key={`flipbook-${config.flipSpeed}-${isSinglePage ? 'single' : 'spread'}`}
                   width={renderDimensions.width}
                   height={renderDimensions.height}
                   size="fixed"
@@ -358,11 +548,11 @@ export const Stage: React.FC<StageProps> = ({
                   minHeight={100}
                   maxHeight={2000}
                   showCover={config.isHardCover}
-                  mobileScrollSupport={true}
-                  className="flipbook-container"
+                  mobileScrollSupport={false}
+                  className={`flipbook-container ${isSinglePage ? 'flipbook-single-page' : ''}`}
                   flippingTime={effectiveFlippingTime}
-                  usePortrait={false}
-                  startZIndex={0}
+                  usePortrait={isSinglePage}
+                  startZIndex={10}
                   autoSize={true}
                   clickEventForward={false}
                   useMouseEvents={true}
@@ -375,13 +565,14 @@ export const Stage: React.FC<StageProps> = ({
                     }
                     setIsFlipping(true);
                     onPageChange(e.data);
+                    // Reset isFlipping after animation completes
                     setTimeout(() => setIsFlipping(false), effectiveFlippingTime);
-                  } }
+                  }}
                   ref={bookRef}
                   startPage={currentPage}
                   drawShadow={true}
                   maxShadowOpacity={0.25}
-                  style={undefined}
+                  style={{ overflow: 'visible' }}
                   onInit={() => {
                     patchHoverCornerSensitivity();
                   }}
@@ -399,13 +590,20 @@ export const Stage: React.FC<StageProps> = ({
         </Document>
         </div>
       </div>
+      </div>
 
       {/* Floating Controls */}
-      <div className={`absolute ${isSharedView ? 'bottom-10' : 'bottom-[240px] md:bottom-[210px]'} left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border px-4 py-2 flex items-center gap-4 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`flipbook-controls absolute ${isSharedView ? 'bottom-10' : 'bottom-[240px] md:bottom-[210px]'} left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border px-4 py-2 flex items-center gap-4 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <button
-          onClick={goToPrev}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Prev button clicked, currentPage:', currentPage);
+            handlePrev();
+          }}
           className="w-8 h-8 border border-ink-dim flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-sm font-bold"
-          disabled={!pdfFile || currentPage === 0}
+          disabled={currentPage <= 0}
+          type="button"
         >
           &lt;
         </button>
@@ -415,9 +613,15 @@ export const Stage: React.FC<StageProps> = ({
         </div>
 
         <button
-          onClick={goToNext}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Next button clicked, currentPage:', currentPage);
+            handleNext();
+          }}
           className="w-8 h-8 border border-ink-dim flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-sm font-bold"
-          disabled={!pdfFile || currentPage >= totalPages - 1}
+          disabled={currentPage >= totalPages - 1}
+          type="button"
         >
           &gt;
         </button>
