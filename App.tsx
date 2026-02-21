@@ -334,8 +334,8 @@ export default function App() {
         <header className="h-12 flex items-center px-4 sm:px-10 justify-between bg-transparent z-10 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 text-xs font-bold">
             <span className="w-2 h-2 bg-ink-main rounded-full"></span>
-            <span className="hidden sm:inline">PDF2FLIP // SYS.01 // READ_MODE</span>
-            <span className="sm:hidden">PDF2FLIP // READ</span>
+            <span className="hidden sm:inline">NPM-FLIP // SYS.01 // READ_MODE</span>
+            <span className="sm:hidden">NPM-FLIP // READ</span>
           </div>
           <a 
             href="/" 

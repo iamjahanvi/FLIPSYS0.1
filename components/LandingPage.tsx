@@ -31,14 +31,14 @@ export function LandingPage({ onUpload }: LandingPageProps) {
   };
 
   return (
-    <div className="flex-none flex flex-col items-center justify-start pt-8 sm:pt-12 px-4 sm:px-6">
+    <div className="flex-none flex flex-col items-center justify-center pt-11 sm:pt-12 px-2 sm:px-6">
       {/* Main Headline - Responsive font sizes */}
       <div className="text-center mb-6 sm:mb-10 w-full max-w-[800px]">
-        <h1 className="text-ink-main font-mono font-medium tracking-tight leading-tight">
-          <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl">
+        <h1 className="text-ink-main font-mono font-semibold tracking-[-0.04em] leading-tight sm:leading-[1.5] sm:font-medium">
+          <span className="block text-[32px] sm:text-4xl md:text-5xl lg:text-6xl">
             Turn <span className="text-black">PDFs into</span>
           </span>
-          <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl mt-1">
+          <span className="block text-[32px] sm:text-4xl md:text-5xl lg:text-6xl mt-0.5 sm:mt-2 leading-[1.325]">
             <span className="text-gray-500">interactive</span> flipbooks
           </span>
         </h1>
@@ -67,7 +67,7 @@ export function LandingPage({ onUpload }: LandingPageProps) {
           </div>
 
           {/* Footer */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-4 border-t border-ink-light mt-4 gap-2 sm:gap-0">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-4 border-t border-ink-light mt-4 gap-1 sm:gap-0">
             <span className="text-[8px] font-bold text-ink-dim tracking-widest">MAX_SIZE: 20MB // FORMAT: PDF_V1.7+</span>
             <span className="text-[8px] font-bold text-ink-dim tracking-widest">VER: 1.0.42_STABLE</span>
           </div>
@@ -92,9 +92,9 @@ export function LandingPage({ onUpload }: LandingPageProps) {
               <span className="text-[10px] sm:text-[8px] font-bold text-ink-main">01</span>
             </div>
             <div className="min-w-0">
-              <h3 className="text-[11px] sm:text-[9px] font-bold text-ink-main tracking-widest mb-1">UPLOAD</h3>
+              <h3 className="text-[12px] sm:text-[9px] font-bold text-ink-main tracking-widest mb-0.5">UPLOAD</h3>
               <p className="hidden sm:block text-[10px] sm:text-[8px] text-ink-dim leading-relaxed">Drag any PDF document into the workspace to start the engine.</p>
-                            <p className="sm:hidden text-[10px] text-ink-dim leading-relaxed">Drag PDF to start.</p>
+                            <p className="sm:hidden text-[10px] text-ink-dim leading-relaxed">Import your PDF document</p>
             </div>
           </div>
 
@@ -104,9 +104,9 @@ export function LandingPage({ onUpload }: LandingPageProps) {
               <span className="text-[10px] sm:text-[8px] font-bold text-ink-main">02</span>
             </div>
             <div className="min-w-0">
-              <h3 className="text-[11px] sm:text-[9px] font-bold text-ink-main tracking-widest mb-1">CONFIGURE</h3>
+              <h3 className="text-[12px] sm:text-[9px] font-bold text-ink-main tracking-widest mb-0.5">CONFIGURE</h3>
               <p className="hidden sm:block text-[10px] sm:text-[8px] text-ink-dim leading-relaxed">Adjust physics, shadows, and flip mechanics in the lower panel.</p>
-                            <p className="sm:hidden text-[10px] text-ink-dim leading-relaxed">Adjust flip settings.</p>
+                            <p className="sm:hidden text-[10px] text-ink-dim leading-relaxed">Customize motion, style and more</p>
             </div>
           </div>
 
@@ -116,9 +116,9 @@ export function LandingPage({ onUpload }: LandingPageProps) {
               <span className="text-[10px] sm:text-[8px] font-bold text-ink-main">03</span>
             </div>
             <div className="min-w-0">
-              <h3 className="text-[11px] sm:text-[9px] font-bold text-ink-main tracking-widest mb-1">SHARE</h3>
+              <h3 className="text-[12px] sm:text-[9px] font-bold text-ink-main tracking-widest mb-0.5">SHARE</h3>
               <p className="hidden sm:block text-[10px] sm:text-[8px] text-ink-dim leading-relaxed">Generate a unique URL to share your interactive flipbook.</p>
-                            <p className="sm:hidden text-[10px] text-ink-dim leading-relaxed">Generate shareable URL.</p>
+                            <p className="sm:hidden text-[10px] text-ink-dim leading-relaxed">Generate link to share with others</p>
             </div>
           </div>
         </div>

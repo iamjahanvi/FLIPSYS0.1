@@ -12,8 +12,8 @@ export const Header: React.FC<HeaderProps> = ({ isReady, isLoading = false, hasE
       {/* Logo - always visible */}
       <div className="flex items-center gap-2 md:gap-3 text-xs font-bold tracking-tight shrink-0">
         <div className={`w-2 h-2 rounded-full ${hasError ? 'bg-red-600' : 'bg-ink-main'}`}></div>
-        <span className="hidden sm:inline">PDF2FLIP // SYS.01</span>
-        <span className="sm:hidden">PDF2FLIP</span>
+        <span className="hidden sm:inline">NPM-FLIP // SYS.01</span>
+        <span className="sm:hidden">NPM-FLIP</span>
       </div>
       
       {/* Status indicators - responsive */}
