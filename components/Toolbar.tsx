@@ -20,13 +20,13 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   const [hasCopied, setHasCopied] = React.useState(false);
   const [deployUrl, setDeployUrl] = React.useState('https://flipsys-0-1.vercel.app?share=...');
   const [flipSpeedValue, setFlipSpeedValue] = React.useState(config.flipSpeed);
-  const [openSection, setOpenSection] = useState<SectionType>(null);
+  const [openSection, setOpenSection] = useState<SectionType>('physics');
   const isShareUrlReady = !deployUrl.includes('share=...');
 
-  // Reset all accordions when a new file is uploaded/replaced
+  // Reset to Physics tab when a new file is uploaded/replaced
   useEffect(() => {
-    setOpenSection(null);
-    onAccordionChange?.(null);
+    setOpenSection('physics');
+    onAccordionChange?.('physics');
   }, [pdfFile?.name]);
 
   const toggleSection = (section: SectionType) => {
@@ -89,7 +89,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   };
 
   return (
-    <section className="bg-[#F0F0F0]/95 border-t border-panel-border backdrop-blur-md shrink-0 z-40 md:h-48 md:px-6 md:py-4 pb-[env(safe-area-inset-bottom,0px)]">
+    <section className="bg-[#F0F0F0]/95 backdrop-blur-md shrink-0 z-40 md:h-48 md:px-6 md:py-4 pb-[env(safe-area-inset-bottom,0px)]">
       
       {/* Desktop: Horizontal layout */}
       <div className="hidden md:flex h-full gap-6">
@@ -235,196 +235,166 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
         </div>
       </div>
 
-      {/* Mobile: Accordion layout */}
-      <div className="md:hidden flex flex-col">
+      {/* Mobile: Horizontal Tab layout */}
+      <div className="md:hidden flex flex-col-reverse">
         
-        {/* SECTION 01: SOURCE - Accordion */}
-        <div className="border-b border-panel-border">
+        {/* Tab Bar - Always visible at bottom */}
+        <div className="flex">
+          {/* Tab 01: SOURCE */}
           <button 
             onClick={() => toggleSection('source')}
-            className="w-full flex justify-between items-center px-4 py-3 bg-white/50"
+            className={`flex-1 flex flex-col items-center justify-center px-4 py-3 border-r border-t border-panel-border last:border-r-0 transition-colors ${openSection === 'source' ? 'bg-white border-t-transparent' : 'bg-[#F0F0F0]/95'}`}
           >
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-ink-dim tracking-widest">01 SOURCE</span>
-            </div>
-            <svg 
-              className={`w-4 h-4 text-ink-dim transition-transform duration-300 ${openSection === 'source' ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+            <span className={`text-[12px] font-bold tracking-widest leading-tight ${openSection === 'source' ? 'text-ink-main' : 'text-ink-dim'}`}>01</span>
+            <span className={`text-[12px] font-bold tracking-widest leading-tight ${openSection === 'source' ? 'text-ink-main' : 'text-ink-dim'}`}>SOURCE</span>
           </button>
           
-          {openSection === 'source' && (
-            <div className="px-4 pb-4 pt-2 flex flex-col gap-3">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="application/pdf"
-                className="hidden"
-              />
-
-              <button
-                onClick={triggerUpload}
-                className="h-[50px] bg-white border border-dashed border-ink-dim flex items-center justify-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors group relative overflow-hidden"
-                style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)' }}
-              >
-                <svg 
-                  className="w-4 h-4 text-ink-main group-hover:scale-110 transition-transform duration-300" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                <span className="text-[9px] font-bold tracking-widest text-ink-dim group-hover:text-ink-main">
-                  {pdfName ? 'REPLACE FILE' : 'UPLOAD FILE'}
-                </span>
-              </button>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-bold text-ink-dim tracking-widest mb-1">FILENAME</span>
-                  <span className="text-xs text-ink-main truncate font-bold" title={pdfName || 'NONE'}>
-                    {pdfName ? (pdfName.length > 12 ? pdfName.substring(0, 10) + '...' : pdfName) : 'N/A'}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-bold text-ink-dim tracking-widest mb-1">SIZE</span>
-                  <span className="text-xs text-ink-main font-bold">{pdfSize ? formatBytes(pdfSize) : '0KB'}</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* SECTION 02: PHYSICS - Accordion */}
-        <div className="border-b border-panel-border">
+          {/* Tab 02: PHYSICS */}
           <button 
             onClick={() => toggleSection('physics')}
-            className="w-full flex justify-between items-center px-4 py-3 bg-white/50"
+            className={`flex-1 flex flex-col items-center justify-center px-4 py-3 border-r border-t border-panel-border last:border-r-0 transition-colors ${openSection === 'physics' ? 'bg-white border-t-transparent' : 'bg-[#F0F0F0]/95'}`}
           >
-            <span className="text-[10px] font-bold text-ink-dim tracking-widest">02 PHYSICS</span>
-            <svg 
-              className={`w-4 h-4 text-ink-dim transition-transform duration-300 ${openSection === 'physics' ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+            <span className={`text-[12px] font-bold tracking-widest leading-tight ${openSection === 'physics' ? 'text-ink-main' : 'text-ink-dim'}`}>02</span>
+            <span className={`text-[12px] font-bold tracking-widest leading-tight ${openSection === 'physics' ? 'text-ink-main' : 'text-ink-dim'}`}>PHYSICS</span>
           </button>
           
-          {openSection === 'physics' && (
-            <div className="px-4 pb-4 pt-4 md:pt-2 flex flex-col gap-6 md:gap-4">
-              <div className="flex flex-col gap-1">
-                <div className="flex justify-between text-[10px] font-bold tracking-widest text-ink-dim">
-                  <span>FLIP_SPEED</span>
-                  <span className="text-ink-main">{flipSpeedValue}ms</span>
-                </div>
-                <input
-                  type="range"
-                  min="500"
-                  max="2000"
-                  step="100"
-                  value={flipSpeedValue}
-                  onChange={(e) => setFlipSpeedValue(parseInt(e.target.value))}
-                  onMouseUp={() => setConfig({ ...config, flipSpeed: flipSpeedValue })}
-                  onTouchEnd={() => setConfig({ ...config, flipSpeed: flipSpeedValue })}
-                  className="w-full h-[2px] bg-ink-light appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-ink-main [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-ink-main [&::-webkit-slider-thumb]:mt-[-1px]"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex justify-between text-[10px] font-bold tracking-widest text-ink-dim">
-                  <span>SHADOW</span>
-                  <span className="text-ink-main">{config.shadowIntensity}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={config.shadowIntensity}
-                  onChange={(e) => setConfig({ ...config, shadowIntensity: parseInt(e.target.value) })}
-                  className="w-full h-[2px] bg-ink-light appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-ink-main [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-ink-main [&::-webkit-slider-thumb]:mt-[-1px]"
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-[10px] font-bold tracking-widest text-ink-dim cursor-pointer" onClick={handleSoundToggle}>
-                <span>SOUND_FX</span>
-                <div className={`w-6 h-3 border border-ink-main relative transition-all ${config.useSound ? 'bg-ink-main/10' : ''}`}>
-                  <div className={`absolute top-[1px] w-2 h-2 bg-ink-main transition-all duration-300 ${config.useSound ? 'left-[13px]' : 'left-[1px]'}`}></div>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Tab 03: SHARE - Direct action button */}
+          <button 
+            onClick={async () => {
+              if (!pdfName || !pdfFile || isGenerating) return;
+              setOpenSection(null);
+              setIsGenerating(true);
+              try {
+                const result = await uploadPDF(pdfFile, config);
+                if (result) {
+                  const shareUrl = `${window.location.origin}${window.location.pathname}?share=${result.id}`;
+                  setDeployUrl(shareUrl);
+                  await navigator.clipboard.writeText(shareUrl);
+                  alert('Linked copied to clipboard');
+                } else {
+                  alert('Failed to upload PDF. Check console for details.');
+                }
+              } catch (err: any) {
+                alert('Upload error: ' + (err.message || 'Unknown error'));
+              }
+              setIsGenerating(false);
+            }}
+            disabled={!pdfName || isGenerating}
+            className="flex-1 flex items-center justify-center px-4 py-3 bg-ink-main text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isGenerating ? (
+              <span className="flex items-center gap-1 h-[10px]">
+                <span className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                <span className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                <span className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+              </span>
+            ) : (
+              <span className="flex flex-col items-center">
+                <svg className="w-3 h-3 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                <span className="text-[12px] font-bold tracking-widest leading-tight">SHARE</span>
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* SECTION 03: SHARE - Accordion */}
-        <div className="border-b border-panel-border">
-          <button 
-            onClick={() => toggleSection('share')}
-            className="w-full flex justify-between items-center px-4 py-3 bg-white/50"
-          >
-            <span className="text-[10px] font-bold text-ink-dim tracking-widest">03 SHARE</span>
-            <svg 
-              className={`w-4 h-4 text-ink-dim transition-transform duration-300 ${openSection === 'share' ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          
-          {openSection === 'share' && (
-            <div className="px-4 pb-4 pt-2 flex flex-col gap-3">
-              <div 
-                className="h-[50px] bg-white border border-dashed border-ink-dim flex items-center justify-between gap-3 px-4 cursor-pointer hover:bg-gray-50 transition-colors group relative overflow-hidden"
-                style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)' }}
-                onClick={() => {
-                  if (!isShareUrlReady) return;
-                  navigator.clipboard.writeText(deployUrl);
-                  setHasCopied(true);
-                  setTimeout(() => setHasCopied(false), 2000);
-                }}
-              >
+        {/* Expanded Content Panel - Opens above tabs */}
+        {openSection && (
+          <div className="bg-white border-t border-panel-border border-b-0 px-4 py-6">
+            
+            {/* SOURCE Content */}
+            {openSection === 'source' && (
+              <div className="flex flex-col gap-4">
                 <input
-                  type="text"
-                  value={deployUrl}
-                  readOnly
-                  className="flex-1 text-[10px] text-ink-dim font-mono outline-none bg-transparent cursor-pointer"
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="application/pdf"
+                  className="hidden"
                 />
-                {isShareUrlReady && (
+
+                <button
+                  onClick={triggerUpload}
+                  className="h-[50px] bg-[#F0F0F0F2] border border-dashed border-ink-dim flex items-center justify-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors group relative overflow-hidden"
+                  style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)' }}
+                >
                   <svg 
-                    className="w-4 h-4 text-ink-main group-hover:scale-110 transition-transform duration-300 shrink-0" 
+                    className="w-4 h-4 text-ink-main group-hover:scale-110 transition-transform duration-300" 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
                   >
-                    {hasCopied ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    )}
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
-                )}
-              </div>
+                  <span className="text-[9px] font-bold tracking-widest text-ink-main">
+                    {pdfName ? 'REPLACE FILE' : 'UPLOAD FILE'}
+                  </span>
+                </button>
 
-              <button
-                onClick={handleGenerate}
-                disabled={!pdfName || isGenerating}
-                className="w-full py-2 bg-ink-main text-white text-[10px] font-bold tracking-wider hover:bg-ink-dim transition-colors flex justify-between px-3 items-center disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span>{isGenerating ? 'GENERATING...' : hasCopied ? 'URL COPIED!' : 'GENERATE & COPY'}</span>
-                <span className={isGenerating ? 'animate-spin' : ''}>{isGenerating ? '◌' : '↗'}</span>
-              </button>
-            </div>
-          )}
-        </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[8px] font-bold text-ink-dim tracking-widest mb-1">FILENAME</span>
+                    <span className="text-xs text-ink-main truncate font-bold" title={pdfName || 'NONE'}>
+                      {pdfName || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[8px] font-bold text-ink-dim tracking-widest mb-1">SIZE</span>
+                    <span className="text-xs text-ink-main font-bold">{pdfSize ? formatBytes(pdfSize) : '0KB'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PHYSICS Content */}
+            {openSection === 'physics' && (
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between text-[10px] font-bold tracking-widest text-ink-dim">
+                    <span>FLIP_SPEED</span>
+                    <span className="text-ink-main">{flipSpeedValue}ms</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="500"
+                    max="2000"
+                    step="100"
+                    value={flipSpeedValue}
+                    onChange={(e) => setFlipSpeedValue(parseInt(e.target.value))}
+                    onMouseUp={() => setConfig({ ...config, flipSpeed: flipSpeedValue })}
+                    onTouchEnd={() => setConfig({ ...config, flipSpeed: flipSpeedValue })}
+                    className="w-full h-[2px] bg-ink-light appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-ink-main [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-ink-main [&::-webkit-slider-thumb]:mt-[-1px]"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between text-[10px] font-bold tracking-widest text-ink-dim">
+                    <span>SHADOW</span>
+                    <span className="text-ink-main">{config.shadowIntensity}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={config.shadowIntensity}
+                    onChange={(e) => setConfig({ ...config, shadowIntensity: parseInt(e.target.value) })}
+                    className="w-full h-[2px] bg-ink-light appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-ink-main [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-ink-main [&::-webkit-slider-thumb]:mt-[-1px]"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] font-bold tracking-widest text-ink-dim cursor-pointer" onClick={handleSoundToggle}>
+                  <span>SOUND_FX</span>
+                  <div className={`w-6 h-3 border border-ink-main relative transition-all ${config.useSound ? 'bg-ink-main/10' : ''}`}>
+                    <div className={`absolute top-[1px] w-2 h-2 bg-ink-main transition-all duration-300 ${config.useSound ? 'left-[13px]' : 'left-[1px]'}`}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+
+          </div>
+        )}
       </div>
 
     </section>
