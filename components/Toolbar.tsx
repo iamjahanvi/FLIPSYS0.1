@@ -89,7 +89,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   };
 
   return (
-    <section className="bg-[#F0F0F0]/95 backdrop-blur-md shrink-0 z-40 md:h-48 md:px-6 md:py-4 pb-[env(safe-area-inset-bottom,0px)]">
+    <section className="bg-[#F0F0F0]/95 backdrop-blur-md shrink-0 z-40 md:h-48 md:px-6 md:py-4 pb-[env(safe-area-inset-bottom,0px)] md:border-t md:border-panel-border">
       
       {/* Desktop: Horizontal layout */}
       <div className="hidden md:flex h-full gap-6">
@@ -120,7 +120,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            <span className="text-[9px] font-bold tracking-widest text-ink-dim group-hover:text-ink-main">
+            <span className="text-[9px] font-bold tracking-widest text-ink-main">
               {pdfName ? 'REPLACE FILE' : 'UPLOAD FILE'}
             </span>
           </button>
@@ -301,7 +301,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
 
         {/* Expanded Content Panel - Opens above tabs */}
         {openSection && (
-          <div className="bg-white border-t border-panel-border border-b-0 px-4 py-6">
+          <div className="bg-white border-t-0 border-b-0 px-4 py-6">
             
             {/* SOURCE Content */}
             {openSection === 'source' && (
