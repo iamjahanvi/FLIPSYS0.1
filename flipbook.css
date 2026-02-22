@@ -243,18 +243,61 @@
 
 /* Mobile: Ensure flipping pages are always visible above shadows */
 @media (max-width: 1023px) {
+  /* Base z-index for all pages - higher than shadows */
   .stf__wrapper .stf__page {
-    z-index: 50 !important;
+    z-index: 100 !important;
   }
   
-  .stf__wrapper .stf__page[style*="z-index"] {
-    z-index: 200 !important;
+  /* Pages with explicit z-index (being flipped) get highest priority */
+  .stf__wrapper .stf__page[style*="z-index: 1"],
+  .stf__wrapper .stf__page[style*="z-index: 2"],
+  .stf__wrapper .stf__page[style*="z-index: 3"],
+  .stf__wrapper .stf__page[style*="z-index: 4"],
+  .stf__wrapper .stf__page[style*="z-index: 5"] {
+    z-index: 300 !important;
   }
   
   /* Ensure shadows stay behind pages during flip */
   .stf__outerShadow,
   .stf__innerShadow {
-    z-index: 1 !important;
+    z-index: 10 !important;
+  }
+  
+  /* Single page mode specific: ensure the flipping page stays visible */
+  .flipbook-single-page .stf__page {
+    z-index: 150 !important;
+  }
+  
+  .flipbook-single-page .stf__page[style*="z-index"] {
+    z-index: 400 !important;
+  }
+  
+  /* Ensure page canvas/content is visible during flip in single-page mode */
+  .flipbook-single-page .stf__page canvas,
+  .flipbook-single-page .stf__page .react-pdf__Page__canvas {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+  }
+  
+  /* Fix for fast flips - ensure content doesn't disappear */
+  .flipbook-single-page .stf__page[style*="transform"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  
+  /* Critical: Ensure backface is visible during flip on mobile */
+  .flipbook-single-page .stf__page,
+  .flipbook-single-page .stf__page * {
+    backface-visibility: visible !important;
+    -webkit-backface-visibility: visible !important;
+  }
+  
+  /* Ensure the page content wrapper is visible */
+  .flipbook-single-page .stf__page > div {
+    backface-visibility: visible !important;
+    -webkit-backface-visibility: visible !important;
+    opacity: 1 !important;
   }
 }
 
@@ -298,12 +341,23 @@
    ============================================ */
 
 /* GPU acceleration for page flips */
-.stf__page,
 .stf__wrapper,
 .stf__book {
   will-change: transform;
   transform: translateZ(0);
   backface-visibility: hidden;
+}
+
+/* Pages need visible backface during flip animation */
+.stf__page {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: visible !important;
+}
+
+/* Ensure pages being flipped show their content */
+.stf__page[style*="transform"] {
+  backface-visibility: visible !important;
 }
 
 /* Reduce motion for users who prefer it */
