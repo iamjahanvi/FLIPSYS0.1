@@ -391,10 +391,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] font-bold tracking-widest text-ink-dim cursor-pointer" onClick={handleSoundToggle}>
-                  <span>SOUND_FX</span>
-                  <div className={`w-6 h-3 border border-ink-main relative transition-all ${config.useSound ? 'bg-ink-main/10' : ''}`}>
-                    <div className={`absolute top-[1px] w-2 h-2 bg-ink-main transition-all duration-300 ${config.useSound ? 'left-[13px]' : 'left-[1px]'}`}></div>
+                <div className="flex items-center justify-between text-[10px] font-bold tracking-widest text-ink-dim cursor-pointer py-2 -my-2" onClick={handleSoundToggle}>
+                  <span className="pointer-events-none">SOUND_FX</span>
+                  <div className={`w-6 h-3 border border-ink-main relative transition-all pointer-events-none ${config.useSound ? 'bg-ink-main/10' : ''}`}>
+                    <div className={`absolute top-[1px] w-2 h-2 bg-ink-main transition-all duration-300 pointer-events-none ${config.useSound ? 'left-[13px]' : 'left-[1px]'}`}></div>
                   </div>
                 </div>
               </div>
@@ -406,7 +406,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
       </div>
 
       {/* Toast Notification */}
-      <div className={`fixed bottom-20 left-4 right-4 bg-ink-main text-white px-6 py-3 text-[10px] font-bold tracking-wider text-center transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-50 md:hidden ${toast.visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+      <div className={`fixed bottom-36 left-4 right-4 bg-ink-main text-white px-6 py-3 text-[10px] font-bold tracking-wider text-center transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-30 md:hidden ${toast.visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
         {toast.message}
       </div>
 

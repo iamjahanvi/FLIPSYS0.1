@@ -596,6 +596,12 @@ export const Stage: React.FC<StageProps> = ({
                     // Reset isFlipping after animation completes
                     setTimeout(() => setIsFlipping(false), effectiveFlippingTime);
                   }}
+                  onChangeState={(e) => {
+                    // Play sound when flip starts (state changes to 'flipping')
+                    if (e.data === 'flipping') {
+                      playFlipSound();
+                    }
+                  }}
                   ref={bookRef}
                   startPage={currentPage}
                   drawShadow={true}
