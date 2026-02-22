@@ -21,7 +21,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   const [deployUrl, setDeployUrl] = React.useState('https://flipsys-0-1.vercel.app?share=...');
   const [flipSpeedValue, setFlipSpeedValue] = React.useState(config.flipSpeed);
   const [openSection, setOpenSection] = useState<SectionType>('physics');
+  const [toast, setToast] = React.useState<{ message: string; visible: boolean }>({ message: '', visible: false });
   const isShareUrlReady = !deployUrl.includes('share=...');
+
+  const showToast = (message: string) => {
+    setToast({ message, visible: true });
+    setTimeout(() => {
+      setToast({ message: '', visible: false });
+    }, 2000);
+  };
 
   // Reset to Physics tab when a new file is uploaded/replaced
   useEffect(() => {
@@ -270,12 +278,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
                   const shareUrl = `${window.location.origin}${window.location.pathname}?share=${result.id}`;
                   setDeployUrl(shareUrl);
                   await navigator.clipboard.writeText(shareUrl);
-                  alert('Linked copied to clipboard');
+                  showToast('Link copied to clipboard');
                 } else {
-                  alert('Failed to upload PDF. Check console for details.');
+                  showToast('Failed to upload PDF');
                 }
               } catch (err: any) {
-                alert('Upload error: ' + (err.message || 'Unknown error'));
+                showToast('Upload error: ' + (err.message || 'Unknown error'));
               }
               setIsGenerating(false);
             }}
@@ -395,6 +403,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
 
           </div>
         )}
+      </div>
+
+      {/* Toast Notification */}
+      <div className={`fixed bottom-20 left-4 right-4 bg-ink-main text-white px-6 py-3 text-[10px] font-bold tracking-wider text-center transition-all duration-300 z-50 md:hidden ${toast.visible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+        {toast.message}
       </div>
 
     </section>
