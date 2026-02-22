@@ -621,7 +621,7 @@ export const Stage: React.FC<StageProps> = ({
       </div>
 
       {/* Floating Controls - desktop only */}
-      <div className={`hidden md:flex flipbook-controls absolute bottom-[218px] left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border p-2 items-center gap-4 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`hidden md:flex flipbook-controls absolute bottom-[200px] left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border p-2 items-center gap-4 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <button
           onClick={(e) => {
             e.preventDefault();
