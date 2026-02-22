@@ -27,7 +27,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   const showToast = (message: string) => {
     setToast({ message, visible: true });
     setTimeout(() => {
-      setToast({ message: '', visible: false });
+      setToast(prev => ({ ...prev, visible: false }));
     }, 2000);
   };
 
@@ -406,7 +406,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
       </div>
 
       {/* Toast Notification */}
-      <div className={`fixed bottom-20 left-4 right-4 bg-ink-main text-white px-6 py-3 text-[10px] font-bold tracking-wider text-center transition-all duration-300 z-50 md:hidden ${toast.visible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+      <div className={`fixed bottom-20 left-4 right-4 bg-ink-main text-white px-6 py-3 text-[10px] font-bold tracking-wider text-center transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-50 md:hidden ${toast.visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
         {toast.message}
       </div>
 
