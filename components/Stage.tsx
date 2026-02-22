@@ -315,7 +315,8 @@ export const Stage: React.FC<StageProps> = ({
     return () => window.cancelAnimationFrame(frame);
   }, [renderDimensions, totalPages]);
 
-  const playFlipSound = () => {
+  // Use ref to ensure playFlipSound is always accessible in callbacks
+  const playFlipSoundRef = useRef(() => {
     if (config.useSound && audioRef.current) {
       // Reset to start and play
       audioRef.current.currentTime = 0;
@@ -328,6 +329,26 @@ export const Stage: React.FC<StageProps> = ({
         });
       }
     }
+  });
+  
+  // Update the ref when config changes
+  useEffect(() => {
+    playFlipSoundRef.current = () => {
+      if (config.useSound && audioRef.current) {
+        audioRef.current.currentTime = 0;
+        const playPromise = audioRef.current.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch(e => {
+            console.log("Audio play blocked, will retry on next interaction");
+          });
+        }
+      }
+    };
+  }, [config.useSound]);
+
+  const playFlipSound = () => {
+    playFlipSoundRef.current();
   };
 
   // Index-based navigation - works identically in both spread and portrait modes
@@ -597,9 +618,13 @@ export const Stage: React.FC<StageProps> = ({
                     setTimeout(() => setIsFlipping(false), effectiveFlippingTime);
                   }}
                   onChangeState={(e) => {
-                    // Play sound when flip starts (state changes to 'flipping')
-                    if (e.data === 'flipping') {
-                      playFlipSound();
+                    // Debug: log all state changes
+                    console.log('Flip state changed:', e.data);
+                    // Play sound when flip starts (state changes to 'flipping' or 'user_fold')
+                    // 'user_fold' is triggered when user manually starts dragging a page
+                    // 'flipping' is triggered when the flip animation begins
+                    if (e.data === 'flipping' || e.data === 'user_fold') {
+                      playFlipSoundRef.current();
                     }
                   }}
                   ref={bookRef}
