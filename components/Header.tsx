@@ -4,18 +4,33 @@ interface HeaderProps {
   isReady: boolean;
   isLoading?: boolean;
   hasError?: boolean;
+  currentPage?: number;
+  totalPages?: number;
 }
 
-export const Header: React.FC<HeaderProps> = ({ isReady, isLoading = false, hasError = false }) => {
+export const Header: React.FC<HeaderProps> = ({ 
+  isReady, 
+  isLoading = false, 
+  hasError = false,
+  currentPage = 0,
+  totalPages = 0
+}) => {
   return (
-    <header className="h-12 border-b border-panel-border flex items-center justify-between px-4 md:px-6 bg-[#E6E6E6]/80 backdrop-blur-sm z-50">
+    <header className="h-12 border-b border-panel-border flex items-center justify-between px-4 md:px-6 bg-[#F0F0F0]/80 backdrop-blur-sm z-50">
       {/* Logo - always visible */}
       <div className="flex items-center gap-2 md:gap-3 text-xs font-bold tracking-tight shrink-0">
         <div className={`w-2 h-2 rounded-full ${hasError ? 'bg-red-600' : 'bg-ink-main'}`}></div>
         <span className="hidden sm:inline">NPM-FLIP // SYS.01</span>
-        <span className="sm:hidden">NPM-FLIP</span>
+        {/* Mobile: Show NPM-FLIP // page counter when PDF is loaded */}
+        {totalPages > 0 && isReady && !hasError ? (
+          <span className="sm:hidden">
+            NPM-FLIP // {`${(currentPage).toString().padStart(2, '0')}-${(totalPages - 1).toString().padStart(2, '0')}`}
+          </span>
+        ) : (
+          <span className="sm:hidden">NPM-FLIP</span>
+        )}
       </div>
-      
+
       {/* Status indicators - responsive */}
       <div className="flex gap-3 md:gap-6">
         {hasError ? (

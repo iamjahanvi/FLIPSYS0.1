@@ -309,7 +309,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
 
         {/* Expanded Content Panel - Opens above tabs */}
         {openSection && (
-          <div className="bg-white border-t-0 border-b-0 px-4 py-6">
+          <div className="bg-white border-t border-panel-border border-b-0 px-4 py-6">
             
             {/* SOURCE Content */}
             {openSection === 'source' && (

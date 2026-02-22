@@ -328,7 +328,7 @@ export default function App() {
   return (
     <div className={`h-[100dvh] w-screen flex flex-col font-mono text-ink-main overflow-x-hidden overflow-y-hidden select-none ${isSharedView ? 'bg-[#E6E6E6]' : ''}`} style={isSharedView ? undefined : backgroundStyle}>
       {/* Header - simplified for shared view */}
-      {isRouteResolved && !isSharedView && <Header isReady={isReady} isLoading={isLoading} hasError={hasError} />}
+      {isRouteResolved && !isSharedView && <Header isReady={isReady} isLoading={isLoading} hasError={hasError} currentPage={currentPage} totalPages={totalPages} />}
       
       {/* Shared view header */}
       {isRouteResolved && isSharedView && (

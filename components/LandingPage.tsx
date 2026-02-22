@@ -47,7 +47,7 @@ export function LandingPage({ onUpload }: LandingPageProps) {
       {/* Upload Component */}
       <div className="w-full max-w-[800px] mb-6 sm:mb-8 px-2 sm:px-0">
         <div
-          className="bg-[#FAFAFA] border border-panel-border p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:border-ink-main hover:bg-white hover:shadow-lg"
+          className="bg-white border border-panel-border p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:border-ink-main hover:bg-white hover:shadow-lg"
           onClick={handleClick}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
@@ -84,7 +84,7 @@ export function LandingPage({ onUpload }: LandingPageProps) {
 
       {/* Three Steps in One Box - Responsive: stack on mobile, row on desktop */}
       <div className="w-full max-w-[800px] px-2 sm:px-0">
-        <div className="bg-[#F5F5F5] border border-panel-border p-4 sm:p-6">
+        <div className="bg-[#F0F0F0] border border-panel-border p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-stretch justify-between gap-4 sm:gap-6 lg:gap-8">
           {/* Step 01: Upload */}
           <div className="flex items-stretch gap-3 flex-1 min-w-0">
