@@ -392,44 +392,14 @@ export const Stage: React.FC<StageProps> = ({
     return () => window.removeEventListener('touchstart', checkTouch);
   }, []);
 
-  // Touch swipe detection with 25% threshold
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
-  
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (!isTouchDevice) return;
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  }, [isTouchDevice]);
-  
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!isTouchDevice || touchStartX.current === null) return;
-    
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const deltaX = endX - touchStartX.current;
-    const deltaY = endY - touchStartY.current;
-    
-    // Only handle horizontal swipes (ignore vertical scrolling)
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      const screenWidth = window.innerWidth;
-      const swipePercent = Math.abs(deltaX) / screenWidth;
-      
-      // 25% threshold for complete flip
-      if (swipePercent >= 0.25) {
-        if (deltaX > 0) {
-          // Swipe right = previous page
-          handlePrev();
-        } else {
-          // Swipe left = next page
-          handleNext();
-        }
-      }
-    }
-    
-    touchStartX.current = null;
-    touchStartY.current = null;
-  }, [isTouchDevice, handlePrev, handleNext]);
+  // Initialize the flipbook touch hook for swipe gestures with flip physics
+  const { containerRef: touchContainerRef } = useFlipbookTouch({
+    isEnabled: isTouchDevice && !!pdfFile && totalPages > 0,
+    isSinglePage,
+    pageWidth: renderDimensions?.width || 0,
+    onFlipPrev: handlePrev,
+    onFlipNext: handleNext,
+  });
 
   // Touch-only click zones for mobile/tablet
   const handleTouchZoneClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -480,8 +450,6 @@ export const Stage: React.FC<StageProps> = ({
       ref={stageRef}
       className={`flipbook-stage flex-1 relative flex flex-col items-center justify-center ${isSharedView ? 'p-4 pb-4' : `pt-16 md:pt-20 ${getMobileBottomPadding()} md:pb-[210px]`}`}
       style={{ overflow: 'visible' }}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
     >
       {/* Responsive layout wrapper */}
       <div 
@@ -557,6 +525,7 @@ export const Stage: React.FC<StageProps> = ({
           {/* Only render FlipBook when we have pages and resolved render dimensions */}
           {totalPages > 0 && renderDimensions && (
             <div 
+              ref={touchContainerRef}
               className="flipbook-click-area relative"
               style={{ 
                 overflow: 'visible',
@@ -567,7 +536,7 @@ export const Stage: React.FC<StageProps> = ({
               {/* Touch edge zones - only for tap navigation, not blocking drag */}
               {isTouchDevice && (
                 <div 
-                  className="absolute inset-0 z-20 flex pointer-events-none"
+                  className="absolute inset-0 z-10 flex pointer-events-none"
                   style={{ 
                     touchAction: 'none',
                     width: '100%',

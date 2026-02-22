@@ -249,21 +249,21 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
         {/* Tab Bar - Always visible at bottom */}
         <div className="flex">
           {/* Tab 01: SOURCE */}
-          <button 
+          <button
             onClick={() => toggleSection('source')}
             className={`flex-1 flex flex-col items-center justify-center px-4 py-3 border-r border-t border-panel-border last:border-r-0 transition-colors ${openSection === 'source' ? 'bg-white border-t-transparent' : 'bg-[#F0F0F0]/95'}`}
           >
-            <span className={`text-[12px] font-bold tracking-widest leading-tight ${openSection === 'source' ? 'text-ink-main' : 'text-ink-dim'}`}>01</span>
-            <span className={`text-[12px] font-bold tracking-widest leading-tight ${openSection === 'source' ? 'text-ink-main' : 'text-ink-dim'}`}>SOURCE</span>
+            <span className={`text-[10px] font-bold tracking-widest leading-tight ${openSection === 'source' ? 'text-ink-main' : 'text-ink-dim'}`}>01</span>
+            <span className={`text-[10px] font-bold tracking-widest leading-tight ${openSection === 'source' ? 'text-ink-main' : 'text-ink-dim'}`}>SOURCE</span>
           </button>
           
           {/* Tab 02: PHYSICS */}
-          <button 
+          <button
             onClick={() => toggleSection('physics')}
             className={`flex-1 flex flex-col items-center justify-center px-4 py-3 border-r border-t border-panel-border last:border-r-0 transition-colors ${openSection === 'physics' ? 'bg-white border-t-transparent' : 'bg-[#F0F0F0]/95'}`}
           >
-            <span className={`text-[12px] font-bold tracking-widest leading-tight ${openSection === 'physics' ? 'text-ink-main' : 'text-ink-dim'}`}>02</span>
-            <span className={`text-[12px] font-bold tracking-widest leading-tight ${openSection === 'physics' ? 'text-ink-main' : 'text-ink-dim'}`}>PHYSICS</span>
+            <span className={`text-[10px] font-bold tracking-widest leading-tight ${openSection === 'physics' ? 'text-ink-main' : 'text-ink-dim'}`}>02</span>
+            <span className={`text-[10px] font-bold tracking-widest leading-tight ${openSection === 'physics' ? 'text-ink-main' : 'text-ink-dim'}`}>PHYSICS</span>
           </button>
           
           {/* Tab 03: SHARE - Direct action button */}
@@ -298,10 +298,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
               </span>
             ) : (
               <span className="flex flex-col items-center">
-                <svg className="w-3 h-3 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-2.5 h-2.5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                 </svg>
-                <span className="text-[12px] font-bold tracking-widest leading-tight">SHARE</span>
+                <span className="text-[10px] font-bold tracking-widest leading-tight">SHARE</span>
               </span>
             )}
           </button>
