@@ -22,6 +22,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   const [flipSpeedValue, setFlipSpeedValue] = React.useState(config.flipSpeed);
   const [openSection, setOpenSection] = useState<SectionType>('physics');
   const [toast, setToast] = React.useState<{ message: string; visible: boolean }>({ message: '', visible: false });
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const isShareUrlReady = !deployUrl.includes('share=...');
 
   const showToast = (message: string) => {
@@ -97,10 +99,44 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   };
 
   return (
-    <section className="bg-[#F0F0F0]/95 backdrop-blur-md shrink-0 z-40 md:h-48 md:px-6 md:py-4 pb-[env(safe-area-inset-bottom,0px)] md:border-t md:border-panel-border">
+    <section 
+      className={`relative bg-[#F0F0F0]/95 backdrop-blur-md shrink-0 z-40 pb-[env(safe-area-inset-bottom,0px)] md:border-t md:border-panel-border transition-all duration-200 ease-out ${isMinimized ? 'md:h-10 md:px-6 md:py-2' : 'md:h-48 md:px-6 md:py-4'}`}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      {/* Desktop Minimize Handle - Centered at top, larger touch area */}
+      {!isMinimized && (
+        <button
+          onClick={() => setIsMinimized(true)}
+          className="hidden md:block absolute -top-4 left-1/2 -translate-x-1/2 w-16 h-12 cursor-pointer group/Handle"
+          aria-label="Minimize toolbar"
+        >
+          {/* Visible handle line - 8px from top */}
+          <div className={`absolute top-4 left-1/2 -translate-x-1/2 w-8 h-1 bg-ink-dim/40 group-hover/Handle:bg-ink-dim/60 transition-opacity duration-150 ${isHovering ? 'opacity-100' : 'opacity-0'}`} />
+          
+          {/* Tooltip - 8px below handle (16px from top) */}
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 px-2 py-1 bg-ink-main text-white text-[10px] font-bold tracking-widest whitespace-nowrap transition-opacity duration-150 pointer-events-none opacity-0 group-hover/Handle:opacity-100">
+            MINIMIZE
+          </div>
+        </button>
+      )}
+
+      {/* Desktop Minimized Bar */}
+      {isMinimized && (
+        <div 
+          onClick={() => setIsMinimized(false)}
+          className="hidden md:flex h-full items-center justify-center cursor-pointer group"
+        >
+          <div className="flex items-center gap-2 text-ink-dim">
+            <div className="w-6 h-[2px] bg-ink-dim/40"></div>
+            <span className="text-[10px] font-bold tracking-widest px-2 py-1 transition-all duration-150 group-hover:bg-ink-main group-hover:text-white">EXPAND TOOLBAR</span>
+            <div className="w-6 h-[2px] bg-ink-dim/40"></div>
+          </div>
+        </div>
+      )}
       
-      {/* Desktop: Horizontal layout */}
-      <div className="hidden md:flex h-full gap-6">
+      {/* Desktop: Horizontal layout - Hidden when minimized */}
+      <div className={`hidden md:flex h-full gap-6 ${isMinimized ? '!hidden' : ''}`}>
         {/* SECTION 01: SOURCE */}
         <div className="flex-1 min-w-[200px] flex flex-col gap-3 border-r border-panel-border pr-6">
           <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">

@@ -347,7 +347,7 @@ export default function App() {
         </header>
       )}
 
-      <main className={`${pdfFile || isLoading || hasError ? 'flex-1' : ''} flex flex-col min-h-0 relative overflow-hidden ${isSharedView ? 'pb-0' : ''}`}>
+      <main className={`flex-1 flex flex-col min-h-0 relative overflow-hidden ${isSharedView ? 'pb-0' : ''}`}>
         {/* Error State - Shows when processing fails */}
         {hasError && errorInfo && (
           <ErrorState
