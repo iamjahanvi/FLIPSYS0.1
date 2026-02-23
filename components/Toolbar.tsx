@@ -10,11 +10,13 @@ interface ToolbarProps {
   pdfSize?: number;
   pdfFile?: File | null;
   onAccordionChange?: (openSection: SectionType) => void;
+  isMinimized?: boolean;
+  onMinimizedChange?: (isMinimized: boolean) => void;
 }
 
 export type SectionType = 'source' | 'physics' | 'share' | null;
 
-export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, pdfName, pdfSize, pdfFile, onAccordionChange }) => {
+export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, pdfName, pdfSize, pdfFile, onAccordionChange, isMinimized: externalIsMinimized, onMinimizedChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [hasCopied, setHasCopied] = React.useState(false);
@@ -22,9 +24,18 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   const [flipSpeedValue, setFlipSpeedValue] = React.useState(config.flipSpeed);
   const [openSection, setOpenSection] = useState<SectionType>('physics');
   const [toast, setToast] = React.useState<{ message: string; visible: boolean }>({ message: '', visible: false });
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [internalIsMinimized, setInternalIsMinimized] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const isShareUrlReady = !deployUrl.includes('share=...');
+  
+  // Use external state if provided, otherwise use internal state
+  const isMinimized = externalIsMinimized !== undefined ? externalIsMinimized : internalIsMinimized;
+  const setIsMinimized = (value: boolean) => {
+    if (externalIsMinimized === undefined) {
+      setInternalIsMinimized(value);
+    }
+    onMinimizedChange?.(value);
+  };
 
   const showToast = (message: string) => {
     setToast({ message, visible: true });
@@ -100,7 +111,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
 
   return (
     <section 
-      className={`relative bg-[#F0F0F0]/95 backdrop-blur-md shrink-0 z-40 pb-[env(safe-area-inset-bottom,0px)] md:border-t md:border-panel-border transition-all duration-200 ease-out ${isMinimized ? 'md:h-10 md:px-6 md:py-2' : 'md:h-48 md:px-6 md:py-4'}`}
+      className={`relative bg-[#F0F0F0]/95 backdrop-blur-md shrink-0 z-40 pb-[env(safe-area-inset-bottom,0px)] md:border-t md:border-panel-border ${isMinimized ? 'md:h-10 md:px-6 md:py-2' : 'md:h-48 md:px-6 md:py-4'}`}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
@@ -184,12 +195,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
         </div>
 
         {/* SECTION 02: PHYSICS */}
-        <div className="flex-1 min-w-[200px] flex flex-col justify-between border-r border-panel-border pr-6">
+        <div className="flex-1 min-w-[200px] flex flex-col gap-4 border-r border-panel-border pr-6">
           <div className="flex justify-between items-center pb-1.5 border-b border-ink-light">
             <span className="text-[10px] font-bold text-ink-dim tracking-widest">02 PHYSICS</span>
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <div className="flex justify-between text-[10px] font-bold tracking-widest text-ink-dim">
               <span>FLIP_SPEED</span>
               <span className="text-ink-main">{flipSpeedValue}ms</span>
@@ -207,7 +218,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
             />
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <div className="flex justify-between text-[10px] font-bold tracking-widest text-ink-dim">
               <span>SHADOW</span>
               <span className="text-ink-main">{config.shadowIntensity}%</span>

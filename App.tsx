@@ -51,6 +51,7 @@ export default function App() {
   );
   const [sharedLoadError, setSharedLoadError] = useState<string | null>(null);
   const [toolbarAccordionSection, setToolbarAccordionSection] = useState<SectionType>('source');
+  const [isToolbarMinimized, setIsToolbarMinimized] = useState(false);
 
   // Background pattern style from the design
   const backgroundStyle: React.CSSProperties = {
@@ -388,6 +389,7 @@ export default function App() {
             onError={handleError}
             isSharedView={isSharedView}
             toolbarAccordionSection={toolbarAccordionSection}
+            isToolbarMinimized={isToolbarMinimized}
           />
         )}
 
@@ -455,6 +457,8 @@ export default function App() {
               pdfSize={pdfFile?.size}
               pdfFile={pdfFile}
               onAccordionChange={setToolbarAccordionSection}
+              isMinimized={isToolbarMinimized}
+              onMinimizedChange={setIsToolbarMinimized}
             />
           </div>
         )}

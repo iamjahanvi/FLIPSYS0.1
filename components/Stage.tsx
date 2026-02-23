@@ -17,6 +17,7 @@ interface StageProps {
   onError?: (errorMessage: string) => void;
   isSharedView?: boolean;
   toolbarAccordionSection?: SectionType;
+  isToolbarMinimized?: boolean;
 }
 
 // Move PDFPage outside to ensure referential stability
@@ -58,7 +59,8 @@ export const Stage: React.FC<StageProps> = ({
   totalPages,
   onError,
   isSharedView = false,
-  toolbarAccordionSection
+  toolbarAccordionSection,
+  isToolbarMinimized = false
 }) => {
   const bookRef = useRef<any>(null);
   const [renderDimensions, setRenderDimensions] = useState<{ width: number; height: number } | null>(null);
@@ -620,8 +622,8 @@ export const Stage: React.FC<StageProps> = ({
       </div>
       </div>
 
-      {/* Floating Controls - desktop only */}
-      <div className={`hidden md:flex flipbook-controls absolute bottom-[200px] left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border p-2 items-center gap-4 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      {/* Floating Controls - desktop only - positioned fixed relative to viewport, 8px above toolbar */}
+      <div className={`hidden md:flex flipbook-controls fixed ${isToolbarMinimized ? 'bottom-[44px]' : 'bottom-[196px]'} left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border p-1 items-center gap-2 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <button
           onClick={(e) => {
             e.preventDefault();
@@ -629,15 +631,22 @@ export const Stage: React.FC<StageProps> = ({
             console.log('Prev button clicked, currentPage:', currentPage);
             handlePrev();
           }}
-          className="w-8 h-8 border border-ink-dim flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-sm font-bold"
+          className="w-6 h-6 border border-ink-dim flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-xs font-bold"
           disabled={currentPage <= 0}
           type="button"
         >
           &lt;
         </button>
 
-        <div className="text-[10px] font-bold tracking-widest text-ink-main min-w-[60px] text-center">
-          {totalPages > 0 ? `${(currentPage).toString().padStart(2, '0')} / ${(totalPages - 1).toString().padStart(2, '0')}` : '00 / 00'}
+        <div className="text-[10px] font-bold tracking-widest min-w-[50px] text-center">
+          {totalPages > 0 ? (
+            <>
+              <span className="text-ink-main">{(currentPage).toString().padStart(2, '0')}</span>
+              <span className="text-[#707070]"> / {(totalPages - 1).toString().padStart(2, '0')}</span>
+            </>
+          ) : (
+            <span className="text-[#707070]">00 / 00</span>
+          )}
         </div>
 
         <button
@@ -647,7 +656,7 @@ export const Stage: React.FC<StageProps> = ({
             console.log('Next button clicked, currentPage:', currentPage);
             handleNext();
           }}
-          className="w-8 h-8 border border-ink-dim flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-sm font-bold"
+          className="w-6 h-6 border border-ink-dim flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-xs font-bold"
           disabled={currentPage >= totalPages - 1}
           type="button"
         >
