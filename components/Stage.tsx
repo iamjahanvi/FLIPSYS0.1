@@ -484,18 +484,15 @@ export const Stage: React.FC<StageProps> = ({
         }
       `}</style>
 
-      {/* Book wrapper - centered for all pages */}
+      {/* Book wrapper - centered for all pages in single-page mode */}
       <div
-        className="relative z-20"
+        className="relative"
         style={{
-          // In single-page mode, center without offset
-          // In spread mode (shared or non-shared), offset to center the visible spread
-          // For cover (page 0): shift left by half page width to center the single visible page
-          // For last page: shift right by half page width to center the single visible page
-          // For inner pages in shared view: shift left by half page width to center the spine
-          transform: isSinglePage
-            ? 'none'
-            : `translateX(${renderDimensions && totalPages > 0 ? (currentPage === 0 ? -renderDimensions.width / 2 : (currentPage === totalPages - 1) ? renderDimensions.width / 2 : isSharedView ? -renderDimensions.width / 2 : 0) : 0}px)`,
+          // In single-page mode, always center the book
+          // In spread mode, offset for first and last pages to center the visible spread
+          transform: isSinglePage 
+            ? 'none' 
+            : `translateX(${renderDimensions && totalPages > 0 ? (currentPage === 0 ? -renderDimensions.width / 2 : (currentPage === totalPages - 1) ? renderDimensions.width / 2 : 0) : 0}px)`,
           transition: canAnimatePosition ? 'transform 0.5s ease-out' : 'none',
           overflow: 'visible',
         }}
@@ -601,8 +598,8 @@ export const Stage: React.FC<StageProps> = ({
       </div>
       </div>
 
-      {/* Floating Controls - desktop only, hidden in shared view - positioned fixed relative to viewport, 8px above toolbar */}
-      <div className={`flipbook-controls fixed ${isToolbarMinimized ? 'bottom-[44px]' : 'bottom-[196px]'} left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border p-1 items-center gap-2 z-50 shadow-lg transition-opacity duration-500 ${isSharedView ? 'hidden' : 'hidden md:flex'} ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      {/* Floating Controls - desktop only - positioned fixed relative to viewport, 8px above toolbar */}
+      <div className={`hidden md:flex flipbook-controls fixed ${isToolbarMinimized ? 'bottom-[44px]' : 'bottom-[196px]'} left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border p-1 items-center gap-2 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <button
           onClick={(e) => {
             e.preventDefault();
