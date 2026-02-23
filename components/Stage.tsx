@@ -484,15 +484,18 @@ export const Stage: React.FC<StageProps> = ({
         }
       `}</style>
 
-      {/* Book wrapper - centered for all pages in single-page mode or shared view */}
+      {/* Book wrapper - centered for all pages */}
       <div
         className="relative z-20"
         style={{
-          // In single-page mode or shared view, always center the book without offset
-          // In spread mode (non-shared), offset for first and last pages to center the visible spread
-          transform: isSinglePage || isSharedView
+          // In single-page mode, center without offset
+          // In spread mode (shared or non-shared), offset to center the visible spread
+          // For cover (page 0): shift left by half page width to center the single visible page
+          // For last page: shift right by half page width to center the single visible page
+          // For inner pages in shared view: shift left by half page width to center the spine
+          transform: isSinglePage
             ? 'none'
-            : `translateX(${renderDimensions && totalPages > 0 ? (currentPage === 0 ? -renderDimensions.width / 2 : (currentPage === totalPages - 1) ? renderDimensions.width / 2 : 0) : 0}px)`,
+            : `translateX(${renderDimensions && totalPages > 0 ? (currentPage === 0 ? -renderDimensions.width / 2 : (currentPage === totalPages - 1) ? renderDimensions.width / 2 : isSharedView ? -renderDimensions.width / 2 : 0) : 0}px)`,
           transition: canAnimatePosition ? 'transform 0.5s ease-out' : 'none',
           overflow: 'visible',
         }}
@@ -532,7 +535,7 @@ export const Stage: React.FC<StageProps> = ({
               className="flipbook-click-area relative"
               style={{ 
                 overflow: 'visible',
-                width: isSinglePage ? renderDimensions.width : 'auto',
+                width: isSinglePage ? renderDimensions.width : renderDimensions.width * 2,
                 height: renderDimensions.height,
               }}
             >
