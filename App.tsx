@@ -354,7 +354,7 @@ export default function App() {
           </div>
           <a 
             href="/" 
-            className="text-[10px] font-bold text-red-600 hover:opacity-70 transition-opacity"
+            className="text-xs font-bold text-red-600 hover:opacity-70 transition-opacity"
           >
             [EXIT]
           </a>

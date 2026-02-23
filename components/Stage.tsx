@@ -273,16 +273,20 @@ export const Stage: React.FC<StageProps> = ({
       const stageHeight = window.innerHeight;
       setWindowWidth(stageWidth);
 
-      // Determine layout mode based on breakpoints
+      // Determine layout mode based on breakpoints and orientation
       // Desktop: >= 1024px → 2-page spread
-      // Tablet: 600px - 1023px → 1 page
-      // Mobile: < 600px → 1 page
-      const newIsSinglePage = stageWidth < 1024;
+      // Mobile landscape: width >= 600px AND height < width → 2-page spread
+      // Mobile portrait: width < 600px OR height >= width → 1 page
+      const isLandscape = stageWidth > stageHeight;
+      const isMobileLandscape = stageWidth >= 600 && isLandscape;
+      const newIsSinglePage = stageWidth < 1024 && !isMobileLandscape;
       setIsSinglePage(newIsSinglePage);
 
       const horizontalPadding = stageWidth < 600 ? 16 : 40;
+      // For shared view: less vertical padding needed since no toolbar
+      // Mobile landscape needs minimal padding to maximize book view
       const verticalPadding = isSharedView 
-        ? (stageWidth < 600 ? 80 : 120) 
+        ? (stageWidth < 600 ? 80 : (isMobileLandscape ? 60 : 120)) 
         : (stageWidth < 600 ? 180 : 320);
 
       const availableWidth = stageWidth - horizontalPadding;
