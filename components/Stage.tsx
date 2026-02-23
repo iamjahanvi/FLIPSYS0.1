@@ -599,7 +599,7 @@ export const Stage: React.FC<StageProps> = ({
       </div>
 
       {/* Floating Controls - desktop only - positioned fixed relative to viewport, 8px above toolbar */}
-      <div className={`hidden md:flex flipbook-controls fixed ${isToolbarMinimized ? 'bottom-[44px]' : 'bottom-[196px]'} left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border p-1 items-center gap-2 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`hidden md:flex flipbook-controls fixed ${isSharedView ? 'bottom-[32px]' : (isToolbarMinimized ? 'bottom-[44px]' : 'bottom-[196px]')} left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border p-1 items-center gap-2 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <button
           onClick={(e) => {
             e.preventDefault();
