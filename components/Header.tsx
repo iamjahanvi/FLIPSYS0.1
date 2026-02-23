@@ -18,22 +18,22 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="h-12 border-b border-panel-border flex items-center justify-between px-4 md:px-6 bg-[#F0F0F0]/80 backdrop-blur-sm z-50">
       {/* Logo - always visible */}
-      <div className="flex items-center gap-1 text-xs font-bold tracking-tight shrink-0">
+      <a href="/" className="flex items-center gap-2 text-xs font-bold tracking-tight shrink-0 cursor-pointer hover:opacity-70 transition-opacity">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" height="16" width="16" className={hasError ? 'text-red-600' : 'text-ink-main'}>
-          <g id="devices-fold">
-            <path id="Union" fill="currentColor" d="M4 22.0002c-1.10448 0 -1.99986 -0.8955 -2 -2h2zm4 0H6v-2h2zm6.9189 -20.49996c0.9635 -0.41065 2.0809 0.28999 2.0811 1.38282v1.11718h3c1.1046 0 2 0.89543 2 2V20.0002c-0.0002 1.1045 -0.8955 2 -2 2h-9c-0.0383 0 -0.0761 -0.0026 -0.1133 -0.0068 -0.0075 -0.0008 -0.0149 -0.0029 -0.0224 -0.0039 -0.0335 -0.0045 -0.0663 -0.0108 -0.0987 -0.0186 -0.0081 -0.0019 -0.0163 -0.0037 -0.0244 -0.0058 -0.0367 -0.0098 -0.0725 -0.0214 -0.1074 -0.0352 -0.003 -0.0011 -0.0059 -0.0027 -0.0088 -0.0039 -0.0376 -0.0152 -0.0742 -0.0322 -0.1094 -0.0517 -0.0027 -0.0016 -0.006 -0.0024 -0.0088 -0.0039l-0.0937 -0.0625c-0.0111 -0.0081 -0.0225 -0.016 -0.0332 -0.0245 -0.0604 -0.0479 -0.1152 -0.1026 -0.1631 -0.163 -0.0075 -0.0095 -0.0144 -0.0196 -0.0215 -0.0293 -0.0147 -0.02 -0.0288 -0.0405 -0.042 -0.0616 -0.0089 -0.0142 -0.0182 -0.0283 -0.0263 -0.0429 -0.0372 -0.0666 -0.0667 -0.1381 -0.0879 -0.2129 -0.0031 -0.0106 -0.0061 -0.0215 -0.0088 -0.0322 -0.0033 -0.0133 -0.007 -0.0267 -0.0098 -0.0401l-0.0117 -0.0674c-0.0007 -0.005 -0.0004 -0.0105 -0.001 -0.0156 -0.0045 -0.0387 -0.0078 -0.0782 -0.0078 -0.1182V5.56665c0 -0.70232 0.3686 -1.35333 0.9707 -1.71484l3.7578 -2.25489zM17 17.4338c-0.0001 0.7023 -0.3686 1.3534 -0.9707 1.7149l-1.4189 0.8515H20V6.00024h-3zM12 5.56665V19.2336l3 -1.7998V3.76587zM4 18.0002H2v-2h2zm0 -4H2v-2h2zm0 -4H2V8.00024h2zm0 -3.99996H2c0 -1.10457 0.89543 -2 2 -2zm4 0H6v-2h2z" stroke-width="1"></path>
+          <g id="Auto-Stories-Alt">
+            <path id="Vector" fill="currentColor" d="M16.9121 3.85352c1.0538 -0.10157 2.1404 -0.0816 3.1318 0.12207 0.9845 0.2023 1.9469 0.60135 2.6631 1.31738 0.1874 0.18748 0.293 0.44293 0.293 0.70801V17.751c-0.0003 0.3462 -0.18 0.6685 -0.4746 0.8506 -0.2947 0.1818 -0.6629 0.1978 -0.9727 0.0429 -1.28 -0.6399 -2.908 -0.8486 -4.5605 -0.6611 -1.6506 0.1873 -3.2401 0.7608 -4.419 1.5859 -0.3442 0.2409 -0.8022 0.2409 -1.1464 0 -1.1789 -0.8251 -2.76839 -1.3986 -4.41899 -1.5859 -1.65247 -0.1875 -3.28051 0.0212 -4.56054 0.6611 -0.30977 0.1549 -0.67798 0.1389 -0.97266 -0.0429 -0.29456 -0.1821 -0.47435 -0.5044 -0.47461 -0.8506V6.00098l0.00488 -0.09961c0.02282 -0.22866 0.12421 -0.44445 0.28809 -0.6084C1.77342 4.81264 2.36567 4.47741 3 4.24609V16.2988c1.35474 -0.3857 2.82206 -0.4628 4.2334 -0.3027 1.58849 0.1803 3.1649 0.6663 4.502 1.4111l0.2646 0.1524V5.30762c1.2916 -0.74856 3.1366 -1.28291 4.9121 -1.4541m2.7285 2.08105c-0.7472 -0.15345 -1.6254 -0.17774 -2.5371 -0.08984 -1.1271 0.10868 -2.2213 0.37985 -3.1035 0.72265V16.6299c0.8863 -0.3122 1.8244 -0.5269 2.7666 -0.6338 1.4113 -0.1601 2.8787 -0.083 4.2334 0.3027V6.46582c-0.3372 -0.23161 -0.7908 -0.41444 -1.3594 -0.53125M10 5.5V15l-5 -4.5V0.5z" stroke-width="1"></path>
           </g>
         </svg>
-        <a href="/" className="hidden sm:inline cursor-pointer hover:opacity-70 transition-opacity tracking-wide">NPM-FLIP</a>
+        <span className="hidden sm:inline tracking-wide">NPM-FLIP</span>
         {/* Mobile: Show NPM-FLIP // page counter when PDF is loaded */}
         {totalPages > 0 && isReady && !hasError ? (
-          <a href="/" className="sm:hidden cursor-pointer hover:opacity-70 transition-opacity tracking-wide">
+          <span className="sm:hidden tracking-wide">
             NPM-FLIP // {`${(currentPage).toString().padStart(2, '0')}-${(totalPages - 1).toString().padStart(2, '0')}`}
-          </a>
+          </span>
         ) : (
-          <a href="/" className="sm:hidden cursor-pointer hover:opacity-70 transition-opacity tracking-wide">NPM-FLIP</a>
+          <span className="sm:hidden tracking-wide">NPM-FLIP</span>
         )}
-      </div>
+      </a>
 
       {/* Status indicators - responsive */}
       <div className="flex gap-3 md:gap-6">
