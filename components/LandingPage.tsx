@@ -68,8 +68,8 @@ export function LandingPage({ onUpload }: LandingPageProps) {
 
           {/* Footer */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-4 border-t border-ink-light mt-4 gap-1 sm:gap-0">
-            <span className="text-[8px] lg:text-[10px] font-bold text-ink-dim tracking-widest">MAX_SIZE: 20MB // FORMAT: PDF_V1.7+</span>
-            <span className="text-[8px] lg:text-[10px] font-bold text-ink-dim tracking-widest">VER: 1.0.42_STABLE</span>
+            <span className="text-[8px] lg:text-[10px] font-medium text-ink-dim tracking-widest">MAX_SIZE: 20MB // FORMAT: PDF_V1.7+</span>
+            <span className="text-[8px] lg:text-[10px] font-medium text-ink-dim tracking-widest">VER: 1.0.42_STABLE</span>
           </div>
 
           <input

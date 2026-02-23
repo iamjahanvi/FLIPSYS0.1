@@ -58,6 +58,24 @@
   .flipbook-responsive.single-page .stf__page:nth-child(2n) {
     display: none !important;
   }
+  
+  /* Allow overflow for flip animation */
+  .flipbook-responsive {
+    overflow: visible !important;
+  }
+  
+  /* Fix for single-page mode clipping on tablet */
+  .flipbook-single-page .stf__wrapper,
+  .flipbook-single-page .stf__book,
+  .flipbook-single-page [class*="stf__"] {
+    overflow: visible !important;
+  }
+  
+  /* Ensure the flipbook container doesn't clip on tablet */
+  .flipbook-click-area,
+  .flipbook-shadow-wrapper {
+    overflow: visible !important;
+  }
 }
 
 /* Mobile: 1-page (< 600px) */
@@ -213,6 +231,26 @@
 .stf__page {
   opacity: 1 !important;
   visibility: visible !important;
+}
+
+/* Single-page mode: ensure white background on page backface during flip */
+.flipbook-single-page .stf__page {
+  background-color: white !important;
+}
+
+/* Ensure the page container has white background */
+.flipbook-single-page .stf__page > div {
+  background-color: white !important;
+}
+
+/* Force white background on the backface of flipping pages in single-page mode */
+.flipbook-single-page .stf__page[style*="transform"] {
+  background-color: white !important;
+}
+
+/* Ensure react-pdf page has white background */
+.flipbook-single-page .react-pdf__Page {
+  background-color: white !important;
 }
 
 /* Fix for flipping page content visibility */

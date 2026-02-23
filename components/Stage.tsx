@@ -29,7 +29,7 @@ const PDFPage = React.forwardRef<HTMLDivElement, any>((props, ref) => {
     <div
       ref={ref}
       style={style}
-      className="bg-white shadow-sm border-r border-gray-100 overflow-hidden relative"
+      className="bg-white shadow-sm border-r border-gray-100 overflow-visible relative"
       {...rest}
     >
       {/* Page content */}
@@ -83,7 +83,7 @@ export const Stage: React.FC<StageProps> = ({
 
     if (!flipController || flipController.__flipToPagePatched) return;
 
-    // Override flipToPage to fix backward navigation in portrait mode
+    // Override flipToPage to fix navigation in both portrait and landscape modes
     const originalFlipToPage = flipController.flipToPage?.bind(flipController);
     if (typeof originalFlipToPage === 'function') {
       flipController.flipToPage = function(this: any, page: number, corner: string) {
@@ -102,15 +102,28 @@ export const Stage: React.FC<StageProps> = ({
         const flipCorner = corner || 'top';
         const yPos = flipCorner === 'bottom' ? rect.height - 2 : 1;
         
+        // Check if we're in single-page mode by checking the book width vs page width
+        // In single-page mode, book width equals page width
+        // In spread mode, book width equals page width * 2
+        const bookWidth = rect.width || 0;
+        const pageWidth = rect.pageWidth || 0;
+        const isSinglePageMode = bookWidth <= pageWidth * 1.5; // Allow some tolerance
+        
         // For backward navigation, simulate click on left side of page
         // For forward navigation, simulate click on right side of page
-        // This ensures the physics animation works correctly in both portrait and landscape
         if (isGoingBackward) {
           // Click on left edge to flip backward
+          console.log('Backward flip - isSinglePageMode:', isSinglePageMode, 'leftEdgeX:', rect.left + 5);
           this.flip({ x: rect.left + 5, y: yPos });
         } else {
           // Click on right edge to flip forward
-          this.flip({ x: rect.left + rect.pageWidth * 2 - 5, y: yPos });
+          // In single-page mode, click near the right edge of the single page
+          // In spread mode, click near the right edge of the right page
+          const rightEdgeX = isSinglePageMode 
+            ? rect.left + pageWidth - 5 
+            : rect.left + pageWidth * 2 - 5;
+          console.log('Forward flip - isSinglePageMode:', isSinglePageMode, 'rightEdgeX:', rightEdgeX, 'bookWidth:', bookWidth, 'pageWidth:', pageWidth, 'rect.left:', rect.left);
+          this.flip({ x: rightEdgeX, y: yPos });
         }
       };
       
@@ -403,22 +416,6 @@ export const Stage: React.FC<StageProps> = ({
     onFlipNext: handleNext,
   });
 
-  // Touch-only click zones for mobile/tablet
-  const handleTouchZoneClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isTouchDevice) return; // Only handle on touch devices
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const width = rect.width;
-    
-    // Left 50% = previous page, Right 50% = next page
-    if (clickX < width / 2) {
-      handlePrev();
-    } else {
-      handleNext();
-    }
-  }, [isTouchDevice, handlePrev, handleNext]);
-
   // Ref for the stage container
   const stageRef = useRef<HTMLElement>(null);
 
@@ -535,32 +532,7 @@ export const Stage: React.FC<StageProps> = ({
                 height: renderDimensions.height,
               }}
             >
-              {/* Touch edge zones - only for tap navigation, not blocking drag */}
-              {isTouchDevice && (
-                <div 
-                  className="absolute inset-0 z-10 flex pointer-events-none"
-                  style={{ 
-                    touchAction: 'none',
-                    width: '100%',
-                    height: '100%',
-                  }}
-                >
-                  {/* Left edge tap zone - 20% width */}
-                  <div 
-                    className="h-full pointer-events-auto"
-                    style={{ cursor: 'pointer', width: '20%' }} 
-                    onClick={handlePrev}
-                  />
-                  {/* Middle area - no pointer events, allows drag to pass through */}
-                  <div className="h-full" style={{ width: '60%' }} />
-                  {/* Right edge tap zone - 20% width */}
-                  <div 
-                    className="h-full pointer-events-auto"
-                    style={{ cursor: 'pointer', width: '20%' }} 
-                    onClick={handleNext}
-                  />
-                </div>
-              )}
+              {/* Touch handling is managed by useFlipbookTouch hook on the parent container */}
               <HTMLFlipBook
                   key={`flipbook-${config.flipSpeed}-${isSinglePage ? 'single' : 'spread'}`}
                   width={renderDimensions.width}
