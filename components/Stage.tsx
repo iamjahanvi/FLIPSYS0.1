@@ -631,7 +631,7 @@ export const Stage: React.FC<StageProps> = ({
             console.log('Prev button clicked, currentPage:', currentPage);
             handlePrev();
           }}
-          className="w-6 h-6 border border-ink-dim flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-xs font-bold"
+          className="w-6 h-6 flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-xs font-bold"
           disabled={currentPage <= 0}
           type="button"
         >
@@ -656,7 +656,7 @@ export const Stage: React.FC<StageProps> = ({
             console.log('Next button clicked, currentPage:', currentPage);
             handleNext();
           }}
-          className="w-6 h-6 border border-ink-dim flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-xs font-bold"
+          className="w-6 h-6 flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-xs font-bold"
           disabled={currentPage >= totalPages - 1}
           type="button"
         >
