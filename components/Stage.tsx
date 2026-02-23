@@ -484,13 +484,13 @@ export const Stage: React.FC<StageProps> = ({
         }
       `}</style>
 
-      {/* Book wrapper - centered for all pages in single-page mode */}
+      {/* Book wrapper - centered for all pages in single-page mode or shared view */}
       <div
         className="relative"
         style={{
-          // In single-page mode, always center the book
-          // In spread mode, offset for first and last pages to center the visible spread
-          transform: isSinglePage 
+          // In single-page mode or shared view, always center the book
+          // In spread mode (non-shared), offset for first and last pages to center the visible spread
+          transform: isSinglePage || isSharedView
             ? 'none' 
             : `translateX(${renderDimensions && totalPages > 0 ? (currentPage === 0 ? -renderDimensions.width / 2 : (currentPage === totalPages - 1) ? renderDimensions.width / 2 : 0) : 0}px)`,
           transition: canAnimatePosition ? 'transform 0.5s ease-out' : 'none',
@@ -598,8 +598,8 @@ export const Stage: React.FC<StageProps> = ({
       </div>
       </div>
 
-      {/* Floating Controls - desktop only - positioned fixed relative to viewport, 8px above toolbar */}
-      <div className={`hidden md:flex flipbook-controls fixed ${isToolbarMinimized ? 'bottom-[44px]' : 'bottom-[196px]'} left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border p-1 items-center gap-2 z-50 shadow-lg transition-opacity duration-500 ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      {/* Floating Controls - desktop only, hidden in shared view - positioned fixed relative to viewport, 8px above toolbar */}
+      <div className={`flipbook-controls fixed ${isToolbarMinimized ? 'bottom-[44px]' : 'bottom-[196px]'} left-1/2 -translate-x-1/2 bg-panel-bg border border-panel-border p-1 items-center gap-2 z-50 shadow-lg transition-opacity duration-500 ${isSharedView ? 'hidden' : 'hidden md:flex'} ${totalPages > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <button
           onClick={(e) => {
             e.preventDefault();
