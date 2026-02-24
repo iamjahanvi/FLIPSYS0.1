@@ -20,7 +20,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [hasCopied, setHasCopied] = React.useState(false);
-  const [deployUrl, setDeployUrl] = React.useState('https://flipsys-0-1.vercel.app?share=...');
+  const [deployUrl, setDeployUrl] = React.useState('https://flipd.online/?share=...');
   const [flipSpeedValue, setFlipSpeedValue] = React.useState(config.flipSpeed);
   const [openSection, setOpenSection] = useState<SectionType>('physics');
   const [toast, setToast] = React.useState<{ message: string; visible: boolean }>({ message: '', visible: false });
@@ -60,7 +60,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
     const file = event.target.files?.[0];
     if (file && file.type === 'application/pdf') {
       onUpload(file);
-      setDeployUrl('https://flipsys-0-1.vercel.app?share=...');
+      setDeployUrl('https://flipd.online/?share=...');
     }
   };
 
