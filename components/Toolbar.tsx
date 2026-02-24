@@ -94,7 +94,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
       const result = await uploadPDF(pdfFile, config);
       
       if (result) {
-        const shareUrl = `${window.location.origin}${window.location.pathname}?share=${result.id}`;
+        const shareUrl = `https://flipd.online/?share=${result.id}`;
         setDeployUrl(shareUrl);
         navigator.clipboard.writeText(shareUrl);
         setHasCopied(true);
@@ -322,7 +322,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
               try {
                 const result = await uploadPDF(pdfFile, config);
                 if (result) {
-                  const shareUrl = `${window.location.origin}${window.location.pathname}?share=${result.id}`;
+                  const shareUrl = `https://flipd.online/?share=${result.id}`;
                   setDeployUrl(shareUrl);
                   await navigator.clipboard.writeText(shareUrl);
                   showToast('Link copied to clipboard');
