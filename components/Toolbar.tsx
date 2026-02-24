@@ -96,9 +96,22 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
       if (result) {
         const shareUrl = `https://flipd.online/?share=${result.id}`;
         setDeployUrl(shareUrl);
-        navigator.clipboard.writeText(shareUrl);
-        setHasCopied(true);
-        setTimeout(() => setHasCopied(false), 2000);
+        // Use legacy execCommand for better mobile compatibility
+        const textArea = document.createElement('textarea');
+        textArea.value = shareUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          setHasCopied(true);
+          setTimeout(() => setHasCopied(false), 2000);
+        } catch (err) {
+          console.log('Copy failed, URL generated:', shareUrl);
+        }
+        document.body.removeChild(textArea);
       } else {
         alert('Failed to upload PDF. Check console for details.');
       }
@@ -324,8 +337,21 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
                 if (result) {
                   const shareUrl = `https://flipd.online/?share=${result.id}`;
                   setDeployUrl(shareUrl);
-                  await navigator.clipboard.writeText(shareUrl);
-                  showToast('Link copied to clipboard');
+                  // Use legacy execCommand for better mobile compatibility
+                  const textArea = document.createElement('textarea');
+                  textArea.value = shareUrl;
+                  textArea.style.position = 'fixed';
+                  textArea.style.left = '-999999px';
+                  document.body.appendChild(textArea);
+                  textArea.focus();
+                  textArea.select();
+                  try {
+                    document.execCommand('copy');
+                    showToast('Link copied to clipboard');
+                  } catch (err) {
+                    showToast('Link ready! Tap to copy');
+                  }
+                  document.body.removeChild(textArea);
                 } else {
                   showToast('Failed to upload PDF');
                 }
