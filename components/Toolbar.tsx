@@ -23,7 +23,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   const [deployUrl, setDeployUrl] = React.useState('https://flipd.online/?share=...');
   const [flipSpeedValue, setFlipSpeedValue] = React.useState(config.flipSpeed);
   const [openSection, setOpenSection] = useState<SectionType>('physics');
-  const [toast, setToast] = React.useState<{ message: string; visible: boolean }>({ message: '', visible: false });
+  const [toast, setToast] = React.useState<{ message: string; visible: boolean; type?: 'default' | 'error' }>({ message: '', visible: false, type: 'default' });
   const [internalIsMinimized, setInternalIsMinimized] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [uploadError, setUploadError] = useState(false);
@@ -38,8 +38,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
     onMinimizedChange?.(value);
   };
 
-  const showToast = (message: string) => {
-    setToast({ message, visible: true });
+  const showToast = (message: string, type: 'default' | 'error' = 'default') => {
+    setToast({ message, visible: true, type });
     setTimeout(() => {
       setToast(prev => ({ ...prev, visible: false }));
     }, 2000);
@@ -65,7 +65,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
       setDeployUrl('https://flipd.online/?share=...');
     } else if (file) {
       setUploadError(true);
-      showToast('Only PDFs are supported. Try again.');
+      showToast('Only PDFs are supported. Try again.', 'error');
       // Clear error state after 2 seconds
       setTimeout(() => setUploadError(false), 2000);
     }
@@ -486,7 +486,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
       </div>
 
       {/* Toast Notification */}
-      <div className={`fixed bottom-36 left-4 right-4 bg-ink-main text-white px-6 py-3 text-[10px] font-bold tracking-wider text-center transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-30 md:hidden ${toast.visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}>
+      <div className={`fixed bottom-20 left-4 right-4 ${toast.type === 'error' ? 'bg-red-500' : 'bg-ink-main'} text-white px-6 py-3 text-[10px] font-bold tracking-wider text-center transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-30 md:hidden ${toast.visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}>
         {toast.message}
       </div>
 
