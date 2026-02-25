@@ -65,7 +65,7 @@ export function LandingPage({ onUpload }: LandingPageProps) {
           </div>
 
           {/* Upload Content */}
-          <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center border border-dashed border-panel-border">
+          <div className={`flex flex-col items-center justify-center py-8 sm:py-12 text-center border border-dashed ${uploadError ? 'border-red-500' : 'border-panel-border'}`}>
             <div className="w-8 h-8 border border-ink-main flex items-center justify-center mb-4">
               <span className="text-lg font-bold">+</span>
             </div>
