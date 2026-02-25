@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Config, formatBytes } from '../types';
-import { uploadPDF } from '../lib/supabase';
+import { uploadPDF, UploadResult } from '../lib/supabase';
 
 interface ToolbarProps {
   config: Config;
@@ -93,7 +93,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
     try {
       const result = await uploadPDF(pdfFile, config);
       
-      if (result) {
+      if (result.success) {
         const shareUrl = `https://flipd.online/?share=${result.id}`;
         setDeployUrl(shareUrl);
         // Use legacy execCommand for better mobile compatibility
@@ -113,7 +113,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
         }
         document.body.removeChild(textArea);
       } else {
-        alert('Failed to upload PDF. Check console for details.');
+        alert(`Failed to upload PDF: ${(result as Extract<UploadResult, { success: false }>).error}`);
       }
     } catch (err: any) {
       alert('Upload error: ' + (err.message || 'Unknown error'));
@@ -334,7 +334,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
               setIsGenerating(true);
               try {
                 const result = await uploadPDF(pdfFile, config);
-                if (result) {
+                if (result.success) {
                   const shareUrl = `https://flipd.online/?share=${result.id}`;
                   setDeployUrl(shareUrl);
                   // Use legacy execCommand for better mobile compatibility
@@ -353,7 +353,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
                   }
                   document.body.removeChild(textArea);
                 } else {
-                  showToast('Failed to upload PDF');
+                  showToast(`Failed: ${(result as Extract<UploadResult, { success: false }>).error}`);
                 }
               } catch (err: any) {
                 showToast('Upload error: ' + (err.message || 'Unknown error'));

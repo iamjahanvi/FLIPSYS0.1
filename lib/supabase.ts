@@ -14,7 +14,11 @@ export interface FlipbookRecord {
   config?: Config;
 }
 
-export async function uploadPDF(file: File, config: Config): Promise<{ id: string; url: string } | null> {
+export type UploadResult = 
+  | { success: true; id: string; url: string }
+  | { success: false; error: string; stage?: 'storage' | 'database' | 'unknown' };
+
+export async function uploadPDF(file: File, config: Config): Promise<UploadResult> {
   try {
     const id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const filePath = `${id}/${file.name}`;
@@ -25,7 +29,11 @@ export async function uploadPDF(file: File, config: Config): Promise<{ id: strin
     
     if (uploadError) {
       console.error('Upload error:', uploadError);
-      return null;
+      return { 
+        success: false, 
+        error: `Storage: ${uploadError.message}`, 
+        stage: 'storage' 
+      };
     }
     
     const { data: publicUrl } = supabase.storage
@@ -49,13 +57,21 @@ export async function uploadPDF(file: File, config: Config): Promise<{ id: strin
     
     if (dbError) {
       console.error('Database error:', dbError);
-      return null;
+      return { 
+        success: false, 
+        error: `Database: ${dbError.message}`, 
+        stage: 'database' 
+      };
     }
     
-    return { id, url: publicUrl.publicUrl };
-  } catch (error) {
+    return { success: true, id, url: publicUrl.publicUrl };
+  } catch (error: any) {
     console.error('Error uploading PDF:', error);
-    return null;
+    return { 
+      success: false, 
+      error: error?.message || 'Unknown error', 
+      stage: 'unknown' 
+    };
   }
 }
 
