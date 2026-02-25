@@ -26,6 +26,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   const [toast, setToast] = React.useState<{ message: string; visible: boolean }>({ message: '', visible: false });
   const [internalIsMinimized, setInternalIsMinimized] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [uploadError, setUploadError] = useState(false);
   const isShareUrlReady = !deployUrl.includes('share=...');
   
   // Use external state if provided, otherwise use internal state
@@ -59,8 +60,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === 'application/pdf') {
+      setUploadError(false);
       onUpload(file);
       setDeployUrl('https://flipd.online/?share=...');
+    } else if (file) {
+      setUploadError(true);
+      showToast('Only PDFs are supported. Try again.');
+      // Clear error state after 2 seconds
+      setTimeout(() => setUploadError(false), 2000);
     }
   };
 
@@ -177,7 +184,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
 
           <button
             onClick={triggerUpload}
-            className="h-[60px] bg-white border border-dashed border-ink-dim flex items-center justify-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors group relative overflow-hidden"
+            className={`h-[60px] bg-white border border-dashed flex items-center justify-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors group relative overflow-hidden ${uploadError ? 'border-red-500' : 'border-ink-dim'}`}
             style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)' }}
           >
             <svg 
@@ -397,7 +404,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
 
                 <button
                   onClick={triggerUpload}
-                  className="h-[50px] bg-[#F0F0F0F2] border border-dashed border-ink-dim flex items-center justify-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors group relative overflow-hidden"
+                  className={`h-[50px] bg-[#F0F0F0F2] border border-dashed flex items-center justify-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors group relative overflow-hidden ${uploadError ? 'border-red-500' : 'border-ink-dim'}`}
                   style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)' }}
                 >
                   <svg 
