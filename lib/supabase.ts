@@ -4,17 +4,7 @@ import { Config } from '../types';
 const supabaseUrl = (typeof process !== 'undefined' && process.env.VITE_SUPABASE_URL) || 'https://gulpdfocmnoqhutcqoqp.supabase.co';
 const supabaseKey = (typeof process !== 'undefined' && process.env.VITE_SUPABASE_ANON_KEY) || 'sb_publishable_JfI_2GV1ao3rSelpm2MeUw_Vgka02Zf';
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'flipbook-app',
-    },
-  },
-});
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export interface FlipbookRecord {
   id: string;
@@ -33,17 +23,9 @@ export async function uploadPDF(file: File, config: Config): Promise<UploadResul
     const id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const filePath = `${id}/${file.name}`;
     
-    // Convert File to ArrayBuffer for more reliable upload on mobile
-    const arrayBuffer = await file.arrayBuffer();
-    const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-    
     const { error: uploadError } = await supabase.storage
       .from('PDFs')
-      .upload(filePath, blob, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: 'application/pdf',
-      });
+      .upload(filePath, file);
     
     if (uploadError) {
       console.error('Upload error:', uploadError);

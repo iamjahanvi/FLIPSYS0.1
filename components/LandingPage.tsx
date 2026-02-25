@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 
 interface LandingPageProps {
   onUpload: (file: File) => void;
@@ -6,11 +6,15 @@ interface LandingPageProps {
 
 export function LandingPage({ onUpload }: LandingPageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadError, setUploadError] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type === 'application/pdf') {
+      setUploadError(false);
       onUpload(file);
+    } else if (file) {
+      setUploadError(true);
     }
   };
 
@@ -18,7 +22,10 @@ export function LandingPage({ onUpload }: LandingPageProps) {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file && file.type === 'application/pdf') {
+      setUploadError(false);
       onUpload(file);
+    } else if (file) {
+      setUploadError(true);
     }
   };
 
@@ -47,7 +54,7 @@ export function LandingPage({ onUpload }: LandingPageProps) {
       {/* Upload Component */}
       <div className="w-full max-w-[800px] mb-2 sm:mb-8 px-2 sm:px-0">
         <div
-          className="bg-white border border-panel-border p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:border-ink-main hover:bg-white hover:shadow-lg"
+          className={`bg-white border p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:border-ink-main hover:bg-white hover:shadow-lg ${uploadError ? 'border-red-500' : 'border-panel-border'}`}
           onClick={handleClick}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
@@ -68,7 +75,7 @@ export function LandingPage({ onUpload }: LandingPageProps) {
 
           {/* Footer */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-4 border-t border-ink-light mt-4 gap-1 sm:gap-0">
-            <span className="text-[8px] lg:text-[10px] font-medium text-ink-dim tracking-widest">MAX_SIZE: 20MB // FORMAT: PDF_V1.7+</span>
+            <span className={`text-[8px] lg:text-[10px] font-medium tracking-widest ${uploadError ? 'text-red-500' : 'text-ink-dim'}`}>MAX_SIZE: 20MB // FORMAT: PDF_V1.7+</span>
             <span className="text-[8px] lg:text-[10px] font-medium text-ink-dim tracking-widest">BY: JAHANVI_SINGH</span>
           </div>
 
