@@ -164,7 +164,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ config, setConfig, onUpload, p
         >
           <div className="flex items-center gap-2 text-ink-dim">
             <div className="w-6 h-[2px] bg-ink-dim/40"></div>
-            <span className="text-[10px] font-bold tracking-widest px-2 py-1 transition-all duration-150 group-hover:bg-ink-main group-hover:text-white">EXPAND TOOLBAR</span>
+            <span className="text-[10px] font-bold tracking-widest px-2 py-1 transition-all duration-150 group-hover:bg-ink-main group-hover:text-white">EXPAND</span>
             <div className="w-6 h-[2px] bg-ink-dim/40"></div>
           </div>
         </div>
