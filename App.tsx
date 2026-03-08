@@ -8,9 +8,12 @@ import { LandingPage } from './components/LandingPage';
 import { Config, DefaultConfig } from './types';
 import { getPDF } from './lib/supabase';
 
-// PDF.js worker setup is required for react-pdf
+declare const __DEV__: boolean;
+
+// PDF.js worker setup - bundled locally for better performance and reliability
 import { pdfjs } from 'react-pdf';
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const getShareIdFromLocation = (): string | null => {
   const url = new URL(window.location.href);
@@ -268,7 +271,9 @@ export default function App() {
   };
 
   const handleError = (errorMessage: string) => {
-    console.log('handleError called with:', errorMessage);
+    if (__DEV__) {
+      console.log('handleError called with:', errorMessage);
+    }
     const now = new Date();
     const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(3, '0')}`;
     
