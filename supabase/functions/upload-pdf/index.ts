@@ -6,12 +6,27 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from '@supabase/supabase-js'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+// Allowed origins - configure these for your production domains
+const ALLOWED_ORIGINS = [
+  'https://flipd.online',
+  'https://www.flipd.online',
+  'http://localhost:3000',
+  'http://localhost:5173',
+];
+
+const getCorsHeaders = (origin: string | null) => {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Max-Age': '86400',
+  };
+};
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get('origin')
+  const corsHeaders = getCorsHeaders(origin)
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -34,6 +49,30 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'No file provided' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+    
+    // File size validation (max 50MB)
+    const MAX_FILE_SIZE_MB = 50
+    const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+    
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return new Response(
+        JSON.stringify({ error: `File too large. Maximum size is ${MAX_FILE_SIZE_MB}MB` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 413 }
+      )
+    }
+    
+    // PDF content type validation
+    const allowedTypes = ['application/pdf', 'pdf']
+    const isValidType = allowedTypes.some(type => 
+      file.type?.toLowerCase().includes(type) || file.name.toLowerCase().endsWith('.pdf')
+    )
+    
+    if (!isValidType) {
+      return new Response(
+        JSON.stringify({ error: 'Only PDF files are allowed' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 415 }
       )
     }
 

@@ -7,6 +7,8 @@ import { useFlipbookTouch } from '../hooks/useFlipbookTouch';
 import '../flipbook.css';
 import { SectionType } from './Toolbar';
 
+declare const __DEV__: boolean;
+
 interface StageProps {
   pdfFile: File | null;
   config: Config;
@@ -113,7 +115,9 @@ export const Stage: React.FC<StageProps> = ({
         // For forward navigation, simulate click on right side of page
         if (isGoingBackward) {
           // Click on left edge to flip backward
-          console.log('Backward flip - isSinglePageMode:', isSinglePageMode, 'leftEdgeX:', rect.left + 5);
+          if (__DEV__) {
+            console.log('Backward flip - isSinglePageMode:', isSinglePageMode, 'leftEdgeX:', rect.left + 5);
+          }
           this.flip({ x: rect.left + 5, y: yPos });
         } else {
           // Click on right edge to flip forward
@@ -122,7 +126,9 @@ export const Stage: React.FC<StageProps> = ({
           const rightEdgeX = isSinglePageMode 
             ? rect.left + pageWidth - 5 
             : rect.left + pageWidth * 2 - 5;
-          console.log('Forward flip - isSinglePageMode:', isSinglePageMode, 'rightEdgeX:', rightEdgeX, 'bookWidth:', bookWidth, 'pageWidth:', pageWidth, 'rect.left:', rect.left);
+          if (__DEV__) {
+            console.log('Forward flip - isSinglePageMode:', isSinglePageMode, 'rightEdgeX:', rightEdgeX, 'bookWidth:', bookWidth, 'pageWidth:', pageWidth, 'rect.left:', rect.left);
+          }
           this.flip({ x: rightEdgeX, y: yPos });
         }
       };
@@ -219,8 +225,13 @@ export const Stage: React.FC<StageProps> = ({
     }
   }, []);
 
-  // Initialize audio on mount
+  // Initialize audio only when sound is enabled
   useEffect(() => {
+    if (!config.useSound) {
+      audioRef.current = null;
+      return;
+    }
+    
     // Use root-relative path for Vercel deployment (files in public folder)
     const audio = new Audio('/freesound_community-turning-book-page-79935 (mp3cut.net).mp3');
     audio.volume = 0.5;
@@ -231,9 +242,10 @@ export const Stage: React.FC<StageProps> = ({
     audio.load();
     
     return () => {
+      audio.pause();
       audioRef.current = null;
     };
-  }, []);
+  }, [config.useSound]);
 
   // Reset dimensions and error when file changes
   useEffect(() => {
@@ -257,7 +269,9 @@ export const Stage: React.FC<StageProps> = ({
 
       onDocumentLoadSuccess({ numPages: pdf.numPages });
     } catch (error) {
-      console.error("Error calculating PDF dimensions:", error);
+      if (__DEV__) {
+        console.error("Error calculating PDF dimensions:", error);
+      }
       if (onError) {
         onError('Failed to process PDF structure');
       }
@@ -342,9 +356,11 @@ export const Stage: React.FC<StageProps> = ({
       const playPromise = audioRef.current.play();
       
       if (playPromise !== undefined) {
-        playPromise.catch(e => {
+        playPromise.catch(() => {
           // Auto-play was prevented, try again on next user interaction
-          console.log("Audio play blocked, will retry on next interaction");
+          if (__DEV__) {
+            console.log("Audio play blocked, will retry on next interaction");
+          }
         });
       }
     }
@@ -358,8 +374,10 @@ export const Stage: React.FC<StageProps> = ({
         const playPromise = audioRef.current.play();
         
         if (playPromise !== undefined) {
-          playPromise.catch(e => {
-            console.log("Audio play blocked, will retry on next interaction");
+          playPromise.catch(() => {
+            if (__DEV__) {
+              console.log("Audio play blocked, will retry on next interaction");
+            }
           });
         }
       }
@@ -380,13 +398,17 @@ export const Stage: React.FC<StageProps> = ({
       audioRef.current.currentTime = 0;
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
-        playPromise.catch(e => {
-          console.log("Audio play blocked, will retry on next interaction");
+        playPromise.catch(() => {
+          if (__DEV__) {
+            console.log("Audio play blocked, will retry on next interaction");
+          }
         });
       }
     }
     
-    console.log('Navigating to page index:', index);
+    if (__DEV__) {
+      console.log('Navigating to page index:', index);
+    }
     bookRef.current.pageFlip().flip(index);
   }, [totalPages, config.useSound]);
 
@@ -566,7 +588,9 @@ export const Stage: React.FC<StageProps> = ({
                   }}
                   onChangeState={(e) => {
                     // Debug: log all state changes
-                    console.log('Flip state changed:', e.data);
+                    if (__DEV__) {
+                      console.log('Flip state changed:', e.data);
+                    }
                     // Play sound when flip starts (state changes to 'flipping' or 'user_fold')
                     // 'user_fold' is triggered when user manually starts dragging a page
                     // 'flipping' is triggered when the flip animation begins
@@ -604,7 +628,9 @@ export const Stage: React.FC<StageProps> = ({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Prev button clicked, currentPage:', currentPage);
+            if (__DEV__) {
+              console.log('Prev button clicked, currentPage:', currentPage);
+            }
             handlePrev();
           }}
           className="w-6 h-6 flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-xs font-bold"
@@ -629,7 +655,9 @@ export const Stage: React.FC<StageProps> = ({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Next button clicked, currentPage:', currentPage);
+            if (__DEV__) {
+              console.log('Next button clicked, currentPage:', currentPage);
+            }
             handleNext();
           }}
           className="w-6 h-6 flex items-center justify-center hover:bg-ink-main hover:text-white transition-colors cursor-pointer disabled:opacity-30 text-xs font-bold"
