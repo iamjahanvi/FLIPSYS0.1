@@ -20,12 +20,29 @@ export type UploadResult =
 
 export async function uploadPDF(file: File, config: Config): Promise<UploadResult> {
   try {
+    // Step 1: Generate ID and prepare all data upfront (synchronous)
     const id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const filePath = `${id}/${file.name}`;
     
-    const { error: uploadError } = await supabase.storage
+    // Prepare DB record while upload is in progress (parallel preparation)
+    const dbRecord = {
+      id,
+      file_path: filePath,
+      file_name: file.name,
+      config: {
+        flipSpeed: config.flipSpeed,
+        shadowIntensity: config.shadowIntensity,
+        useSound: config.useSound,
+      },
+    };
+    
+    // Step 2: Start storage upload immediately
+    const uploadPromise = supabase.storage
       .from('PDFs')
       .upload(filePath, file);
+    
+    // Step 3: Wait for upload to complete
+    const { error: uploadError } = await uploadPromise;
     
     if (uploadError) {
       console.error('Upload error:', uploadError);
@@ -36,24 +53,10 @@ export async function uploadPDF(file: File, config: Config): Promise<UploadResul
       };
     }
     
-    const { data: publicUrl } = supabase.storage
-      .from('PDFs')
-      .getPublicUrl(filePath);
-    
+    // Step 4: Insert to database (DB record was prepared while upload was running)
     const { error: dbError } = await supabase
       .from('flipbooks')
-      .insert([
-        {
-          id,
-          file_path: filePath,
-          file_name: file.name,
-          config: {
-            flipSpeed: config.flipSpeed,
-            shadowIntensity: config.shadowIntensity,
-            useSound: config.useSound,
-          },
-        }
-      ]);
+      .insert([dbRecord]);
     
     if (dbError) {
       console.error('Database error:', dbError);
@@ -63,6 +66,11 @@ export async function uploadPDF(file: File, config: Config): Promise<UploadResul
         stage: 'database' 
       };
     }
+    
+    // Step 5: Get public URL (can be constructed deterministically, but using API for safety)
+    const { data: publicUrl } = supabase.storage
+      .from('PDFs')
+      .getPublicUrl(filePath);
     
     return { success: true, id, url: publicUrl.publicUrl };
   } catch (error: any) {
